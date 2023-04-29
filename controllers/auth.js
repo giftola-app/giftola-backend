@@ -24,7 +24,7 @@ const register = async (req, res) => {
     password,
     verified: false,
     profileImage: null,
-    createdAt: new Date().toISOString(),
+    createdAt: req.admin.firestore.Timestamp.now(),
     blocked: false,
     deletedAt: null,
   };

@@ -15,7 +15,7 @@ const auth = async (req, res, next) => {
 
     // attach user to the rest of routes
     req.user = {
-      userId: decoded.id,
+      uid: decoded.id,
       name: decoded.name,
       role: decoded.role,
     };

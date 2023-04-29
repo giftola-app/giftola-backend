@@ -67,7 +67,7 @@ function attachAdminAndDb(req, res, next) {
   next();
 }
 
-app.use(/\/api\/v1\/(users|users\/auth)/, attachAdminAndDb);
+app.use(/\/api\/v1\/(contacts|users\/auth)/, attachAdminAndDb);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
