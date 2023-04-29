@@ -4,8 +4,8 @@
   "description": "Backend for Giftola Mobile app",
   "main": "index.js",
   "engines": {
-    "node": "16.x",
-    "npm": "8.15.0"
+    "node": "18.x",
+    "npm": "9.5.1"
   },
   "config": {
     "environment": "dev"
