@@ -33,11 +33,14 @@ const register = async (req, res) => {
 
   const token = createJWT(userRef.id, name, "user");
 
+  delete user.password;
+
   res.status(StatusCodes.OK).json({
     code: "register_user",
     message: "User registered successfully",
     data: {
-      userId: userRef.id,
+      user: userRef.id,
+      ...user,
       token,
     },
   });
@@ -72,10 +75,9 @@ const login = async (req, res) => {
     code: "login_user",
     message: "User logged in successfully",
     data: {
-      user: {
-        id: userRef.id,
-        ...userData,
-      },
+      id: userRef.id,
+      ...userData,
+
       token,
     },
   });

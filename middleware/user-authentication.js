@@ -1,4 +1,3 @@
-const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const { UnauthenticatedError } = require("../errors");
 
@@ -18,7 +17,7 @@ const auth = async (req, res, next) => {
     req.user = {
       userId: decoded.id,
       name: decoded.name,
-      isAdmin: decoded.isAdmin,
+      role: decoded.role,
     };
     next();
   } catch (error) {
