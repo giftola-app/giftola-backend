@@ -33,7 +33,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// const usersRouter = require("./routes/users");
+const userAuthRouter = require("./routes/auth");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -58,14 +58,17 @@ app.get("/", (req, res) => {
   );
 });
 
-app.use("/api/v1/users", (req, res, next) => {
+function attachAdminAndDb(req, res, next) {
   req.admin = admin;
   req.db = db;
   next();
-});
+}
+
+app.use(/\/api\/v1\/(users|users\/auth)/, attachAdminAndDb);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use("/api/v1/users/auth", userAuthRouter);
 // app.use("/api/v1/users", usersRouter);
 
 app.use(notFoundMiddleware);
