@@ -1,5 +1,10 @@
 require("dotenv").config();
 require("express-async-errors");
+const { Storage } = require("@google-cloud/storage");
+const multer = require("multer");
+const multerStorage = multer.memoryStorage();
+const upload = multer({ storage: multerStorage });
+
 const packageJson = require("./package.json");
 const version = packageJson.version;
 //extra security
@@ -29,14 +34,18 @@ const credentials = {
 
 admin.initializeApp({
   credential: admin.credential.cert(credentials),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
 
 const db = admin.firestore();
+
+const bucket = admin.storage().bucket();
 
 const userAuthMiddleware = require("./middleware/user-authentication");
 
 const userAuthRouter = require("./routes/auth");
 const contactsRouter = require("./routes/contacts");
+const assetsRouter = require("./routes/assets");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -64,15 +73,21 @@ app.get("/", (req, res) => {
 function attachAdminAndDb(req, res, next) {
   req.admin = admin;
   req.db = db;
+  req.bucket = bucket;
   next();
 }
 
-app.use(/\/api\/v1\/(contacts|users\/auth)/, attachAdminAndDb);
+app.use(/\/api\/v1\/(contacts|users\/auth|assets)/, attachAdminAndDb);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/v1/users/auth", userAuthRouter);
 app.use("/api/v1/contacts", userAuthMiddleware, contactsRouter);
+app.use(
+  "/api/v1/assets",
+  [upload.single("image"), userAuthMiddleware],
+  assetsRouter
+);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
