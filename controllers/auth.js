@@ -67,7 +67,10 @@ const login = async (req, res) => {
   const userData = await userRef.data();
 
   if (!userData.verified) {
-    throw new UnauthenticatedError("Please verify your email");
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      code: "unverified_email",
+      message: "Please verify your email",
+    });
   }
 
   const isMatch = await matchPassword(password, userData.password);
@@ -165,9 +168,27 @@ const verifyOtp = async (req, res) => {
     verified: true,
   });
 
+  const userDoc = await req.db
+
+    .collection(usersCollection)
+    .doc(otpDataObj.userId)
+    .get();
+
+  const user = await userDoc.data();
+
+  delete user.password;
+
+  const token = createJWT(otpDataObj.userId, user.name, "user");
+
   res.status(StatusCodes.OK).json({
     code: "verify_otp",
+
     message: "Account verified successfully",
+    data: {
+      id: otpDataObj.userId,
+      ...user,
+      token,
+    },
   });
 };
 
