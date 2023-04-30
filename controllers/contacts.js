@@ -33,6 +33,11 @@ const createContact = async (req, res) => {
 };
 
 const getContacts = async (req, res) => {
+  if (req.query.id) {
+    req.params.id = req.query.id;
+    return getContact(req, res);
+  }
+
   const contactsRef = await req.db
     .collection(contactsCollection)
     .where("createdBy", "==", req.user.uid)
@@ -56,7 +61,6 @@ const getContact = async (req, res) => {
   const contactRef = await req.db
     .collection(contactsCollection)
     .doc(req.params.id)
-
     .get();
 
   _verifyExistance(contactRef);
@@ -75,9 +79,11 @@ const getContact = async (req, res) => {
 };
 
 const updateContact = async (req, res) => {
+  const contactId = req.params.id || req.query.id;
+
   const contactRef = await req.db
     .collection(contactsCollection)
-    .doc(req.params.id)
+    .doc(contactId)
     .get();
 
   _verifyExistance(contactRef);
@@ -92,22 +98,24 @@ const updateContact = async (req, res) => {
 
   const updatedContact = await req.db
     .collection(contactsCollection)
-    .doc(req.params.id)
+    .doc(contactId)
     .update(req.body);
 
   res.status(StatusCodes.OK).json({
-    code: "get_contact",
-    message: "Contact retrieved successfully",
+    code: "update_contact",
+    message: "Contact updated successfully",
     data: {
-      id: req.params.id,
+      id: contactId,
     },
   });
 };
 
 const deleteContact = async (req, res) => {
+  const contactId = req.params.id || req.query.id;
+
   const contactRef = await req.db
     .collection(contactsCollection)
-    .doc(req.params.id)
+    .doc(contactId)
     .get();
 
   _verifyExistance(contactRef);
@@ -118,14 +126,14 @@ const deleteContact = async (req, res) => {
 
   const deletedContact = await req.db
     .collection(contactsCollection)
-    .doc(req.params.id)
+    .doc(contactId)
     .update({ deletedAt: req.admin.firestore.Timestamp.now() });
 
   res.status(StatusCodes.OK).json({
     code: "delete_contact",
     message: "Contact deleted successfully",
     data: {
-      id: req.params.id,
+      id: contactId,
     },
   });
 };

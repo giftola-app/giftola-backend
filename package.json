@@ -1,6 +1,6 @@
 {
   "name": "giftola-backend",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Backend for Giftola Mobile app",
   "main": "index.js",
   "engines": {
@@ -34,6 +34,7 @@
     "nodemailer": "^6.9.1",
     "nodemon": "^2.0.20",
     "npm": "^9.6.5",
+    "otp-generator": "^4.0.1",
     "swagger-ui-express": "^4.6.2",
     "xss-clean": "^0.1.1",
     "yamljs": "^0.3.0"

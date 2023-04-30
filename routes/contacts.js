@@ -9,7 +9,16 @@ const {
   deleteContact,
 } = require("../controllers/contacts");
 
-router.route("/").post(createContact).get(getContacts);
+//if req has query param by name id then it will go to getContact
+//else it will go to getContacts
+
+router
+  .route("/")
+  .post(createContact)
+  .get(getContacts)
+  .get(getContact)
+  .patch(updateContact)
+  .delete(deleteContact);
 router.route("/:id").get(getContact).patch(updateContact).delete(deleteContact);
 
 module.exports = router;
