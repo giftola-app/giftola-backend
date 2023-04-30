@@ -93,6 +93,10 @@ const login = async (req, res) => {
 const resendOtp = async (req, res) => {
   const { email } = req.body;
 
+  if (!email) {
+    throw new UnauthenticatedError("Please provide an email");
+  }
+
   const user = await req.db
     .collection(usersCollection)
     .where("email", "==", email)
@@ -156,10 +160,6 @@ const verifyOtp = async (req, res) => {
   }
 
   await otpRef.ref.delete();
-
-  await otpRef.ref.update({
-    verified: true,
-  });
 
   await req.db.collection(usersCollection).doc(otpDataObj.userId).update({
     verified: true,
