@@ -34,7 +34,6 @@ const createContact = async (req, res) => {
 
 const getContacts = async (req, res) => {
   if (req.query.id) {
-    req.params.id = req.query.id;
     return getContact(req, res);
   }
 
@@ -58,9 +57,10 @@ const getContacts = async (req, res) => {
 };
 
 const getContact = async (req, res) => {
+  const contactId = req.params.id || req.query.id;
   const contactRef = await req.db
     .collection(contactsCollection)
-    .doc(req.params.id)
+    .doc(contactId)
     .get();
 
   _verifyExistance(contactRef);
@@ -96,10 +96,7 @@ const updateContact = async (req, res) => {
   delete req.body.createdAt;
   delete req.body.deletedAt;
 
-  const updatedContact = await req.db
-    .collection(contactsCollection)
-    .doc(contactId)
-    .update(req.body);
+  await req.db.collection(contactsCollection).doc(contactId).update(req.body);
 
   res.status(StatusCodes.OK).json({
     code: "update_contact",
@@ -124,7 +121,7 @@ const deleteContact = async (req, res) => {
 
   validateContactAccess(contactData, req);
 
-  const deletedContact = await req.db
+  await req.db
     .collection(contactsCollection)
     .doc(contactId)
     .update({ deletedAt: req.admin.firestore.Timestamp.now() });
@@ -153,9 +150,7 @@ function _verifyExistance(contactRef) {
 
 function validateContactAccess(contactData, req) {
   if (contactData.createdBy !== req.user.uid) {
-    throw new UnauthenticatedError(
-      "You are not authorized to access this contact"
-    );
+    throw new BadRequestError("You are not authorized to access this contact");
   } else if (contactData.deletedAt !== null) {
     throw new BadRequestError("Contact not found");
   }

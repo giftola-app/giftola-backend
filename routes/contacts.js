@@ -16,7 +16,6 @@ router
   .route("/")
   .post(createContact)
   .get(getContacts)
-  .get(getContact)
   .patch(updateContact)
   .delete(deleteContact);
 router.route("/:id").get(getContact).patch(updateContact).delete(deleteContact);

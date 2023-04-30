@@ -46,6 +46,7 @@ const userAuthMiddleware = require("./middleware/user-authentication");
 const userAuthRouter = require("./routes/auth");
 const contactsRouter = require("./routes/contacts");
 const assetsRouter = require("./routes/assets");
+const eventsRouter = require("./routes/events");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -66,7 +67,27 @@ app.use(xss());
 
 app.get("/", (req, res) => {
   res.send(
-    `<h1>Giftola Backend (${version}-${packageJson.config.environment})</h1>`
+    `<!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body {
+            font-family: 'Century Gothic', sans-serif;
+          }
+    
+          h1 {
+            text-align: center;
+            margin-top: 25vh;
+            /* Adjust as needed to center the text vertically */
+            color: #000;
+            /* Optional text shadow for readability */
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Giftola Backend (${version}-${packageJson.config.environment})</h1>
+      </body>
+    </html>`
   );
 });
 
@@ -77,7 +98,7 @@ function attachAdminAndDb(req, res, next) {
   next();
 }
 
-app.use(/\/api\/v1\/(contacts|users\/auth|assets)/, attachAdminAndDb);
+app.use(/\/api\/v1\/(contacts|users\/auth|assets|events)/, attachAdminAndDb);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -88,6 +109,7 @@ app.use(
   [upload.single("image"), userAuthMiddleware],
   assetsRouter
 );
+app.use("/api/v1/events", userAuthMiddleware, eventsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

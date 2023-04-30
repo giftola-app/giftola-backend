@@ -37,7 +37,6 @@ const createEvent = async (req, res) => {
 
 const getEvents = async (req, res) => {
   if (req.query.id) {
-    req.params.id = req.query.id;
     return getEvent(req, res);
   }
 
@@ -61,3 +60,109 @@ const getEvents = async (req, res) => {
     data: events,
   });
 };
+
+const getEvent = async (req, res) => {
+  const eventId = req.params.id || req.query.id;
+  const eventRef = await req.db.collection(eventsCollection).doc(eventId).get();
+
+  if (!eventRef.exists) {
+    throw new BadRequestError("Event does not exist");
+  }
+  const eventDoc = eventRef.data();
+
+  _validateEventAccess(eventDoc, req);
+
+  const event = { id: eventRef.id, ...eventRef.data() };
+
+  res.status(StatusCodes.OK).json({
+    code: "get_event",
+    message: "Event retrieved successfully",
+    data: event,
+  });
+};
+
+const updateEvent = async (req, res) => {
+  const eventId = req.params.id || req.query.id;
+
+  const eventRef = await req.db.collection(eventsCollection).doc(eventId).get();
+
+  if (!eventRef.exists) {
+    throw new BadRequestError("Event does not exist");
+  }
+
+  const eventDoc = eventRef.data();
+
+  _validateEventAccess(eventDoc, req);
+
+  delete req.body.createdBy;
+  delete req.body.createdAt;
+  delete req.body.deletedAt;
+  delete req.body.createdFor;
+
+  await eventRef.ref.update(req.body);
+
+  res.status(StatusCodes.OK).json({
+    code: "update_event",
+    message: "Event updated successfully",
+    data: { id: eventRef.id },
+  });
+};
+
+const deleteEvent = async (req, res) => {
+  const eventId = req.params.id || req.query.id;
+
+  const eventRef = await req.db.collection(eventsCollection).doc(eventId).get();
+
+  if (!eventRef.exists) {
+    throw new BadRequestError("Event does not exist");
+  }
+
+  const eventDoc = eventRef.data();
+
+  _validateEventAccess(eventDoc, req);
+
+  await eventRef.ref.update({ deletedAt: req.admin.firestore.Timestamp.now() });
+
+  res.status(StatusCodes.OK).json({
+    code: "delete_event",
+    message: "Event deleted successfully",
+    data: { id: eventRef.id },
+  });
+};
+
+module.exports = {
+  createEvent,
+  getEvents,
+  getEvent,
+  updateEvent,
+  deleteEvent,
+};
+
+function _validateEventAccess(eventDoc, req) {
+  if (eventDoc.deletedAt) {
+    throw new BadRequestError("No event found");
+  } else if (eventDoc.createdBy !== req.user.uid) {
+    throw new BadRequestError("You are not authorized to view this event");
+  }
+}
+
+function _validateCreateEventFields(event) {
+  switch (true) {
+    case !event.title:
+      throw new BadRequestError("Event title is required");
+    case !event.date:
+      throw new BadRequestError("Event date is required");
+    case !event.description:
+      throw new BadRequestError("Event description is required");
+    case !event.venue:
+      throw new BadRequestError("Event venue is required");
+    case !event.coverImage:
+      throw new BadRequestError("Event cover image is required");
+    case !event.prefferedCost:
+      throw new BadRequestError("Event preffered cost is required");
+    case !event.createdFor:
+      throw new BadRequestError("Event created for is required");
+    default:
+      return;
+  }
+}
