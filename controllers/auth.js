@@ -67,9 +67,10 @@ const login = async (req, res) => {
   const userData = await userRef.data();
 
   if (!userData.verified) {
+    await createAndSendOtp(req, userRef, userData);
     res.status(StatusCodes.UNAUTHORIZED).json({
       code: "unverified_email",
-      message: "Please verify your email",
+      message: "Email not verified. Enter OTP to verify your email",
     });
   }
 
