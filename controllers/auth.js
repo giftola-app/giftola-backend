@@ -1,5 +1,5 @@
 const StatusCodes = require("http-status-codes");
-const { UnauthenticatedError } = require("../errors");
+const { BadRequestError } = require("../errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
@@ -60,7 +60,7 @@ const login = async (req, res) => {
     .get();
 
   if (user.empty) {
-    throw new UnauthenticatedError("Invalid email or password");
+    throw new BadRequestError("Invalid email or password");
   }
 
   const userRef = user.docs[0];
@@ -68,7 +68,7 @@ const login = async (req, res) => {
 
   if (!userData.verified) {
     await createAndSendOtp(req, userRef, userData);
-    res.status(StatusCodes.UNAUTHORIZED).json({
+    res.status(StatusCodes.BAD_REQUEST).json({
       code: "unverified_email",
       message: "Email not verified. Enter OTP to verify your email",
     });
@@ -77,7 +77,7 @@ const login = async (req, res) => {
   const isMatch = await matchPassword(password, userData.password);
 
   if (!isMatch) {
-    throw new UnauthenticatedError("Invalid email or password");
+    throw new BadRequestError("Invalid email or password");
   }
   delete userData.password;
   const token = createJWT(userRef.id, userData.name, "user");
@@ -98,7 +98,7 @@ const resendOtp = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    throw new UnauthenticatedError("Please provide an email");
+    throw new BadRequestError("Please provide an email");
   }
 
   const user = await req.db
@@ -107,14 +107,14 @@ const resendOtp = async (req, res) => {
     .get();
 
   if (user.empty) {
-    throw new UnauthenticatedError("Invalid email");
+    throw new BadRequestError("Invalid email");
   }
 
   const userRef = user.docs[0];
   const userData = await userRef.data();
 
   if (userData.verified) {
-    throw new UnauthenticatedError("Email already verified");
+    throw new BadRequestError("Email already verified");
   }
 
   await createAndSendOtp(req, userRef, userData);
@@ -131,9 +131,9 @@ const verifyOtp = async (req, res) => {
   if (!email || !otp) {
     switch (true) {
       case !email:
-        throw new UnauthenticatedError("Please provide an email");
+        throw new BadRequestError("Please provide an email");
       case !otp:
-        throw new UnauthenticatedError("Please provide an OTP");
+        throw new BadRequestError("Please provide an OTP");
       default:
         break;
     }
@@ -147,20 +147,20 @@ const verifyOtp = async (req, res) => {
     .get();
 
   if (otpData.empty) {
-    throw new UnauthenticatedError("Invalid OTP");
+    throw new BadRequestError("Invalid OTP");
   }
 
   const otpRef = otpData.docs[0];
   const otpDataObj = await otpRef.data();
 
   if (otpDataObj.otpExpiry < req.admin.firestore.Timestamp.now().seconds) {
-    throw new UnauthenticatedError("OTP expired");
+    throw new BadRequestError("OTP expired");
   }
 
   const isMatch = await matchPassword(otp, otpDataObj.hashedOtp);
 
   if (!isMatch) {
-    throw new UnauthenticatedError("Invalid OTP");
+    throw new BadRequestError("Invalid OTP");
   }
 
   await otpRef.ref.delete();
@@ -235,9 +235,9 @@ function _validateLoginBody(email, password) {
   if (!email || !password) {
     switch (true) {
       case !email:
-        throw new UnauthenticatedError("Please provide an email");
+        throw new BadRequestError("Please provide an email");
       case !password:
-        throw new UnauthenticatedError("Please provide a password");
+        throw new BadRequestError("Please provide a password");
       default:
         break;
     }
@@ -251,7 +251,7 @@ async function preventDuplication(req, email) {
     .get();
 
   if (!userExists.empty) {
-    throw new UnauthenticatedError("User already exists");
+    throw new BadRequestError("User already exists");
   }
 }
 
@@ -265,11 +265,11 @@ function _validateRegisterBody(name, email, password) {
   if (!name || !email || !password) {
     switch (true) {
       case !name:
-        throw new UnauthenticatedError("Please provide a name");
+        throw new BadRequestError("Please provide a name");
       case !email:
-        throw new UnauthenticatedError("Please provide an email");
+        throw new BadRequestError("Please provide an email");
       case !password:
-        throw new UnauthenticatedError("Please provide a password");
+        throw new BadRequestError("Please provide a password");
       default:
         break;
     }
