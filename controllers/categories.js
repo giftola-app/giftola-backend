@@ -44,7 +44,6 @@ const getCategories = async (req, res) => {
 
   const categoriesRef = await req.db
     .collection(categoriesCollection)
-    .where("createdBy", "==", req.user.uid)
     .where("deletedAt", "==", null)
     .orderBy("createdAt", "desc")
     .get();
@@ -75,10 +74,6 @@ const getCategory = async (req, res) => {
   }
 
   const categoryDoc = categoryRef.data();
-
-  _validateCategoryAccess(categoryDoc, req);
-
-  const category = { id: categoryRef.id, ...categoryRef.data() };
 
   res.status(StatusCodes.OK).json({
     code: "get_category",

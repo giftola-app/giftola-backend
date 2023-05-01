@@ -19,6 +19,7 @@ const createContact = async (req, res) => {
 
   const contact = {
     ...req.body,
+    selectedCategories: [],
     createdBy: req.user.uid,
     createdAt: req.admin.firestore.Timestamp.now(),
     deletedAt: null,
