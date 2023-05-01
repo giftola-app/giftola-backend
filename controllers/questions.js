@@ -8,16 +8,6 @@ const createQuestion = async (req, res) => {
 
   _validateCreateQuestionFields(req.body);
 
-  // const exampleModel = {
-  //     'title': 'What is your favorite color?',
-  //     'options': [
-  //         'Red',
-  //         'Blue',
-  //         'Green',
-  //         'Yellow'
-  //     ]
-  // };
-
   const question = {
     ...req.body,
     createdBy: req.user.uid,
@@ -43,7 +33,6 @@ const getQuestions = async (req, res) => {
 
   const questionsRef = await req.db
     .collection(questionsCollection)
-    .where("createdBy", "==", req.user.uid)
     .where("deletedAt", "==", null)
     .orderBy("createdAt", "desc")
     .get();
