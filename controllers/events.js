@@ -12,8 +12,7 @@ const createEvent = async (req, res) => {
     coverImage,
     prefferedCost,
     createdFor,
-    createdAt,
-    deletedAt,
+
     status,
   } = req.body;
 
@@ -41,7 +40,6 @@ const getEvents = async (req, res) => {
   }
 
   const eventsRef = await req.db
-
     .collection(eventsCollection)
     .where("createdBy", "==", req.user.uid)
     .where("deletedAt", "==", null)
@@ -130,13 +128,7 @@ const deleteEvent = async (req, res) => {
   });
 };
 
-module.exports = {
-  createEvent,
-  getEvents,
-  getEvent,
-  updateEvent,
-  deleteEvent,
-};
+module.exports = { createEvent, getEvents, getEvent, updateEvent, deleteEvent };
 
 function _validateEventAccess(eventDoc, req) {
   if (eventDoc.deletedAt) {

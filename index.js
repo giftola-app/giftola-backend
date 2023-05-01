@@ -47,6 +47,7 @@ const userAuthRouter = require("./routes/auth");
 const contactsRouter = require("./routes/contacts");
 const assetsRouter = require("./routes/assets");
 const eventsRouter = require("./routes/events");
+const categoriesRouter = require("./routes/categories");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -98,7 +99,10 @@ function attachAdminAndDb(req, res, next) {
   next();
 }
 
-app.use(/\/api\/v1\/(contacts|users\/auth|assets|events)/, attachAdminAndDb);
+app.use(
+  /\/api\/v1\/(contacts|users\/auth|assets|events|categories)/,
+  attachAdminAndDb
+);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -110,6 +114,7 @@ app.use(
   assetsRouter
 );
 app.use("/api/v1/events", userAuthMiddleware, eventsRouter);
+app.use("/api/v1/categories", userAuthMiddleware, categoriesRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
