@@ -8,7 +8,7 @@ const {
   getCategory,
   updateCategory,
   deleteCategory,
-} = require("../controllers/categories");
+} = require("../controllers/interests");
 
 router
   .route("/")

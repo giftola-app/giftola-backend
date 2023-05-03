@@ -2,6 +2,7 @@ const StatusCodes = require("http-status-codes");
 const { UnauthenticatedError, BadRequestError } = require("../errors");
 
 const contactsCollection = "contacts";
+const eventsCollection = "events";
 
 const createContact = async (req, res) => {
   const {
@@ -98,6 +99,8 @@ const updateContact = async (req, res) => {
   delete req.body.createdAt;
   delete req.body.deletedAt;
 
+  req.body.updatedAt = req.admin.firestore.Timestamp.now();
+
   await req.db.collection(contactsCollection).doc(contactId).update(req.body);
 
   res.status(StatusCodes.OK).json({
@@ -127,6 +130,16 @@ const deleteContact = async (req, res) => {
     .collection(contactsCollection)
     .doc(contactId)
     .update({ deletedAt: req.admin.firestore.Timestamp.now() });
+
+  await req.db
+    .collection(eventsCollection)
+    .where("createdFor", "==", contactId)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        doc.ref.update({ deletedAt: req.admin.firestore.Timestamp.now() });
+      });
+    });
 
   res.status(StatusCodes.OK).json({
     code: "delete_contact",

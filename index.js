@@ -47,8 +47,9 @@ const userAuthRouter = require("./routes/auth");
 const contactsRouter = require("./routes/contacts");
 const assetsRouter = require("./routes/assets");
 const eventsRouter = require("./routes/events");
-const categoriesRouter = require("./routes/categories");
+const interestsRouter = require("./routes/interests");
 const questionsRouter = require("./routes/questions");
+const productsRouter = require("./routes/products");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -101,7 +102,7 @@ function attachAdminAndDb(req, res, next) {
 }
 
 app.use(
-  /\/api\/v1\/(contacts|users\/auth|assets|events|categories|questions)/,
+  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products)/,
   attachAdminAndDb
 );
 
@@ -115,8 +116,9 @@ app.use(
   assetsRouter
 );
 app.use("/api/v1/events", userAuthMiddleware, eventsRouter);
-app.use("/api/v1/categories", userAuthMiddleware, categoriesRouter);
+app.use("/api/v1/interests", userAuthMiddleware, interestsRouter);
 app.use("/api/v1/questions", userAuthMiddleware, questionsRouter);
+app.use("/api/v1/products", userAuthMiddleware, productsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
