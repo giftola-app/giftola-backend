@@ -1,23 +1,22 @@
 const StatusCodes = require("http-status-codes");
+
 const { BadRequestError } = require("../errors");
 
-const categoriesCollection = "categories";
+const categoriesCollection = "productCategories";
 
 const createCategory = async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, image } = req.body;
 
   _validateCreateCategoryFields(req.body);
 
-  //check if a category with the same name exists
   let categoryRef = await req.db
-
     .collection(categoriesCollection)
     .where("name", "==", name)
     .where("deletedAt", "==", null)
     .get();
 
   if (!categoryRef.empty) {
-    throw new BadRequestError("Interest with the same name already exists");
+    throw new BadRequestError("Category with the same name already exists");
   }
 
   const category = {
@@ -30,8 +29,8 @@ const createCategory = async (req, res) => {
   categoryRef = await req.db.collection(categoriesCollection).add(category);
 
   res.status(StatusCodes.CREATED).json({
-    code: "create_interest",
-    message: "Interest created successfully",
+    code: "create_category",
+    message: "Category created successfully",
     data: { id: categoryRef.id, ...category },
   });
 };
@@ -54,8 +53,8 @@ const getCategories = async (req, res) => {
   });
 
   res.status(StatusCodes.OK).json({
-    code: "get_interests",
-    message: "Interests retrieved successfully",
+    code: "get_categories",
+    message: "Categories retrieved successfully",
     data: categories,
   });
 };
@@ -69,20 +68,24 @@ const getCategory = async (req, res) => {
     .get();
 
   if (!categoryRef.exists) {
-    throw new BadRequestError("Interest does not exist");
+    throw new BadRequestError("Category does not exist");
   }
 
-  const categoryDoc = categoryRef.data();
+  const category = { id: categoryRef.id, ...categoryRef.data() };
 
   res.status(StatusCodes.OK).json({
-    code: "get_interest",
-    message: "Interest retrieved successfully",
-    data: { id: categoryRef.id, ...categoryDoc },
+    code: "get_category",
+    message: "Category retrieved successfully",
+    data: category,
   });
 };
 
 const updateCategory = async (req, res) => {
   const categoryId = req.params.id || req.query.id;
+
+  const { name, description, image } = req.body;
+
+  _validateUpdateCategoryFields(req.body);
 
   const categoryRef = await req.db
     .collection(categoriesCollection)
@@ -90,40 +93,45 @@ const updateCategory = async (req, res) => {
     .get();
 
   if (!categoryRef.exists) {
-    throw new BadRequestError("Interest does not exist");
+    throw new BadRequestError("Category does not exist");
   }
 
-  const categoryDoc = categoryRef.data();
+  const categoryData = categoryRef.data();
 
-  //check if a category with the same name exists
-  if (req.body.name) {
-    let categoryWithSameNameRef = await req.db
+  if (name) {
+    const categoryWithSameNameRef = await req.db
+
       .collection(categoriesCollection)
-      .where("name", "==", req.body.name)
-      .where("createdBy", "==", req.user.uid)
+      .where("name", "==", name)
       .where("deletedAt", "==", null)
       .get();
 
     if (!categoryWithSameNameRef.empty) {
-      const categoryWithSameNameDoc = categoryWithSameNameRef.docs[0].data();
-
-      if (categoryWithSameNameDoc.name === categoryDoc.name) {
-        throw new BadRequestError("Interest with the same name already exists");
-      }
+      throw new BadRequestError("Category with the same name already exists");
     }
   }
 
-  _validateCategoryAccess(categoryDoc, req);
+  delete categoryData.id;
+  delete categoryData.createdAt;
+  delete categoryData.createdBy;
+  delete categoryData.updatedAt;
+  delete categoryData.updatedBy;
+  delete categoryData.deletedAt;
 
-  delete req.body.createdBy;
-  delete req.body.createdAt;
-  delete req.body.deletedAt;
+  const category = {
+    ...req.body,
+    updatedBy: req.user.uid,
+    updatedAt: req.admin.firestore.Timestamp.now(),
+  };
 
-  await categoryRef.ref.update(req.body);
+  await req.db
+    .collection(categoriesCollection)
+    .doc(categoryId)
+    .update(category);
 
   res.status(StatusCodes.OK).json({
-    code: "update_interest",
-    message: "Interest updated successfully",
+    code: "update_category",
+    message: "Category updated successfully",
     data: { id: categoryRef.id },
   });
 };
@@ -137,38 +145,52 @@ const deleteCategory = async (req, res) => {
     .get();
 
   if (!categoryRef.exists) {
-    throw new BadRequestError("Interest does not exist");
+    throw new BadRequestError("Category does not exist");
   }
 
-  const categoryDoc = categoryRef.data();
-
-  _validateCategoryAccess(categoryDoc, req);
-
-  await categoryRef.ref.update({
+  await req.db.collection(categoriesCollection).doc(categoryId).update({
     deletedAt: req.admin.firestore.Timestamp.now(),
+    deletedBy: req.user.uid,
   });
 
   res.status(StatusCodes.OK).json({
-    code: "delete_interest",
-    message: "Interest deleted successfully",
+    code: "delete_category",
+    message: "Category deleted successfully",
+    data: { id: categoryRef.id },
   });
 };
 
 const _validateCreateCategoryFields = (body) => {
-  if (!body.name) {
+  const { name, description, image } = body;
+
+  if (!name) {
     throw new BadRequestError("Name is required");
   }
 
-  if (!body.description) {
+  if (!description) {
     throw new BadRequestError("Description is required");
+  }
+
+  if (!image) {
+    throw new BadRequestError("Image is required");
   }
 };
 
-const _validateCategoryAccess = (categoryDoc, req) => {
-  if (categoryDoc.createdBy !== req.user.uid) {
-    throw new BadRequestError("Interest does not exist");
-  } else if (categoryDoc.deletedAt) {
-    throw new BadRequestError("Interest does not exist");
+const _validateUpdateCategoryFields = (body) => {
+  const { name, description, image } = body;
+
+  switch (true) {
+    case !name:
+      throw new BadRequestError("Name is required");
+
+    case !description:
+      throw new BadRequestError("Description is required");
+
+    case !image:
+      throw new BadRequestError("Image is required");
+
+    default:
+      break;
   }
 };
 
