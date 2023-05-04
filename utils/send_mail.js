@@ -17,7 +17,7 @@ const sendVerificationOTP = async (email, name, otp) => {
             <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border: 1px solid #dddddd; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); color: #444444;">
               <tr>
                 <td align="center" valign="top" style="padding: 20px;">
-                  <img src="https://uc3f76b19a4ff054b3b94ec699e1.previews.dropboxusercontent.com/p/thumb/AB52BPfRyaqMGjXlHT6Rqv-bdlUPHHBBcysxbUJUNicKzl3iWnJXw3CVo5P5xVFm3ipFVLNqDNR4limWq2tUeVpplHqkZGOGZe7pOK0RsVonEnt9XD0vnopU-17jam41OD7ZCBOaZqMu5mMEu149mjOiEAJyXhxCCRxnd1qMiSYgX4K0JP5f72iB6_Z06YXR-96uakfvQxGhScSMaJ2VhP79n_WQVchqT1ATpIFALDpHTP5dhy7FxVdMNAWHz4IFJyor8tWwMgZlDU8RW_IEn9QUqCfV0V2NTrhtosRcGEAoWZMZ6jZyv9S2biBXEnHqvif2CZN13yF6QTqE2FxLpmMS-QRyniJgCeacviJec75L6VHhFPtMNwWCYAYX-p8zGzo/p.png?size=512x512&size_mode=1" alt="Giftola logo" height="100" style="display: block;">
+                  <img src="https://uc7ce4b8fa06a4c8ba9331032e3a.previews.dropboxusercontent.com/p/thumb/AB4s6SnrbLDcI0i3in2PM95da8iAb893ARXvajdb9w0p2FbXvDM3Z895MQhg3rSpbMssbEs3pmjs3YCJfZfZqvA9S4tJT-2ewwXNouzodajRQ402fizo9-QeEwIi7Xf6w4OYX52opIq_4Dco5pRK8_WHajNtgQQkPdsQl2fh7Uvnl4tK16wNDPPzlt7RPj-iadn7Y87wyBFewCNU0RP6ujctWw50-Acb_Uxq2pXmrTPoUFASxhKh3EEo3ibeQvilBexmB17kr0LweyV4gltqtLXQvRZXz04Zdph6y87uusVa7m9vT49K7uwI5k-7aBOE1K9II0TGUYv4AF7Ch9kNeAp0rFa1qovwEdddyylvaA5gHld-oDqWw5xsdPq4-O2GwgI/p.jpeg" alt="Giftola logo" height="100" style="display: block;">
                 </td>
               </tr>
               <tr>
