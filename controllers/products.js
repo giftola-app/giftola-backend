@@ -8,10 +8,24 @@ const contactsCollection = "contacts";
 const eventGiftsCollection = "eventGifts";
 
 const getProducts = async (req, res) => {
-  const eventId = req.query.eventId;
+  const { eventId, tag } = req.query;
 
-  if (!eventId) {
-    throw new BadRequestError("Event ID is required");
+  if (!eventId && !tag) {
+    throw new BadRequestError(" eventId or tag is required");
+  } else if (eventId && tag) {
+    throw new BadRequestError(" eventId and tag cannot be used together");
+  }
+
+  if (tag) {
+    const results = await _getProductsByCategory(tag);
+    const data = results.data.search_results;
+
+    res.status(StatusCodes.OK).json({
+      code: "get_products",
+      message: "Products retrieved successfully",
+      data,
+    });
+    return;
   }
 
   const eventRef = await req.db.collection(eventsCollection).doc(eventId).get();
@@ -107,6 +121,27 @@ const getProducts = async (req, res) => {
     data: productList,
   });
 };
+
+async function _getProductsByCategory(tag) {
+  const API_KEY = process.env.RAINFOREST_API_KEY;
+  const baseUrl = "https://api.rainforestapi.com";
+  const endpoint = "/request";
+  const maxProducts = 2;
+
+  const config = {
+    headers: {
+      "User-Agent": "Axios 0.18.0",
+      "Content-Type": "application/json",
+    },
+  };
+
+  const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}
+    &sort_by=price_low_to_high&pr_min=0&pr_max=1000`;
+
+  const results = await axios.get(url, config);
+
+  return results;
+}
 
 async function _getRainforestProducts(ideaList, prefferedCost) {
   const API_KEY = process.env.RAINFOREST_API_KEY;
