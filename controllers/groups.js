@@ -14,7 +14,6 @@ const createGroup = async (req, res) => {
   const group = {
     ...req.body,
     members: [req.user.uid],
-    products: [],
     createdBy: req.user.uid,
     createdAt: req.admin.firestore.Timestamp.now(),
     deletedAt: null,
@@ -84,7 +83,6 @@ const updateGroup = async (req, res) => {
   _validateGroupAccess(group, req);
 
   delete req.body.members;
-  delete req.body.products;
   delete req.body.createdAt;
   delete req.body.createdBy;
   delete req.body.deletedAt;
@@ -175,9 +173,7 @@ const inviteMember = async (req, res) => {
   res.status(StatusCodes.OK).json({
     code: "invite_member",
     message: "Member invited successfully",
-    data: {
-      inviteUrl: acceptInviteUrl,
-    },
+    data: {},
   });
 };
 
@@ -243,8 +239,6 @@ const getAllGroupMembers = async (req, res) => {
   }
 
   const group = groupRef.data();
-
-  _validateGroupAccess(group, req);
 
   const members = [];
 

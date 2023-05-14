@@ -12,6 +12,21 @@ const {
   getAllGroupMembers,
 } = require("../controllers/groups");
 
+const {
+  createGroupProduct,
+  getGroupProducts,
+  getGroupProduct,
+  updateGroupProduct,
+  deleteGroupProduct,
+} = require("../controllers/group_products");
+
+router
+  .route("/products")
+  .post(createGroupProduct)
+  .get(getGroupProducts)
+  .delete(deleteGroupProduct)
+  .patch(updateGroupProduct);
+
 router.route("/members").get(getAllGroupMembers);
 router
   .route("/")
