@@ -46,6 +46,30 @@ const getGroups = async (req, res) => {
     groups.push({ id: group.id, ...group.data() });
   });
 
+  //get all group member profiles
+  for (let i = 0; i < groups.length; i++) {
+    const members = [];
+
+    for (let j = 0; j < groups[i].members.length; j++) {
+      const memberRef = await req.db
+        .collection(usersCollection)
+        .doc(groups[i].members[j])
+        .get();
+      let member = memberRef.data();
+
+      delete member.password;
+      delete member.blocked;
+      delete member.createdAt;
+      delete member.updatedAt;
+      delete member.deletedAt;
+      delete member.verified;
+
+      members.push({ id: memberRef.id, ...member });
+    }
+
+    groups[i].members = members;
+  }
+
   res.status(StatusCodes.OK).json({
     code: "get_groups",
     message: "Groups retrieved successfully",
