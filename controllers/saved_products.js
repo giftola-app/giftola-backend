@@ -27,11 +27,7 @@ const saveGift = async (req, res) => {
   }
 
   const savedGift = {
-    title,
-    asin,
-    price,
-    image,
-    link,
+    ...req.body,
     createdBy: req.user.uid,
     createdAt: req.admin.firestore.Timestamp.now(),
     deletedAt: null,
