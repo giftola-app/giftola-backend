@@ -20,6 +20,10 @@ const getProducts = async (req, res) => {
     const results = await _getProductsByCategory(tag);
     const data = results.data.search_results;
 
+    data.forEach((item) => {
+      item.link = `${item.link}${process.env.AFFILIATE_TAG}`;
+    });
+
     res.status(StatusCodes.OK).json({
       code: "get_products",
       message: "Products retrieved successfully",

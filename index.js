@@ -52,6 +52,7 @@ const questionsRouter = require("./routes/questions");
 const productsRouter = require("./routes/products");
 const categoriesRouter = require("./routes/categories");
 const groupsRouter = require("./routes/groups");
+const savedProductsRouter = require("./routes/saved_products");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -104,7 +105,7 @@ function attachAdminAndDb(req, res, next) {
 }
 
 app.use(
-  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups)/,
+  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products)/,
   attachAdminAndDb
 );
 
@@ -133,6 +134,7 @@ app.use(
   },
   groupsRouter
 );
+app.use("/api/v1/saved-products", userAuthMiddleware, savedProductsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

@@ -6,6 +6,8 @@ const {
   login,
   resendOtp,
   verifyOtp,
+  saveGift,
+  getSavedGifts,
 } = require("../controllers/auth");
 
 router.post("/register", register);
