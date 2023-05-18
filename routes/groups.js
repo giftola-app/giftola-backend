@@ -27,6 +27,8 @@ router
   .delete(deleteGroupProduct)
   .patch(updateGroupProduct);
 
+router.route("/accept-invite").get(acceptInvite);
+
 router.route("/members").get(getAllGroupMembers);
 router
   .route("/")
@@ -38,7 +40,5 @@ router
 router.route("/:id").get(getGroup).patch(updateGroup).delete(deleteGroup);
 
 router.route("/invite").post(inviteMember);
-
-router.route("/:id/accept-invite").get(acceptInvite);
 
 module.exports = router;
