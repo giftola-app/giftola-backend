@@ -42,7 +42,9 @@ const db = admin.firestore();
 const bucket = admin.storage().bucket();
 
 const userAuthMiddleware = require("./middleware/user-authentication");
+const adminAuthMiddleware = require("./middleware/admin-authentication");
 
+//* Routes-User
 const userAuthRouter = require("./routes/auth");
 const contactsRouter = require("./routes/contacts");
 const assetsRouter = require("./routes/assets");
@@ -53,6 +55,13 @@ const productsRouter = require("./routes/products");
 const categoriesRouter = require("./routes/categories");
 const groupsRouter = require("./routes/groups");
 const savedProductsRouter = require("./routes/saved_products");
+
+//* Routes-Admin
+const adminAuthRouter = require("./routes/admin/auth");
+const adminCategoriesRouter = require("./routes/admin/categories");
+const adminUsersRouter = require("./routes/admin/users");
+const adminInterestsRouter = require("./routes/admin/interests");
+const adminSettingsRouter = require("./routes/admin/settings");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -108,8 +117,11 @@ app.use(
   /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products)/,
   attachAdminAndDb
 );
+app.use(/\/api\/v1\/admin\/(auth|categories|users|settings)/, attachAdminAndDb);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// * Routes - User
 
 app.use("/api/v1/users/auth", userAuthRouter);
 app.use("/api/v1/contacts", userAuthMiddleware, contactsRouter);
@@ -135,6 +147,13 @@ app.use(
   groupsRouter
 );
 app.use("/api/v1/saved-products", userAuthMiddleware, savedProductsRouter);
+
+// * Routes - Admin
+app.use("/api/v1/admin/auth", adminAuthRouter);
+app.use("/api/v1/admin/categories", adminAuthMiddleware, adminCategoriesRouter);
+app.use("/api/v1/admin/users", adminAuthMiddleware, adminUsersRouter);
+app.use("/api/v1/admin/interests", adminAuthMiddleware, adminInterestsRouter);
+app.use("/api/v1/admin/settings", adminAuthMiddleware, adminSettingsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

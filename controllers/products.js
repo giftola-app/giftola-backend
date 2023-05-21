@@ -31,7 +31,6 @@ const getProducts = async (req, res) => {
     });
     return;
   }
-
   const eventRef = await req.db.collection(eventsCollection).doc(eventId).get();
   if (!eventRef.exists) {
     throw new BadRequestError("Event does not exist");
@@ -86,8 +85,6 @@ const getProducts = async (req, res) => {
             {"name": "Product 2",
                 "brand": "Brand 2"}]`;
 
-  console.log(prompt);
-
   const ideaList = await askChatGPT(prompt);
 
   const results = await _getRainforestProducts(ideaList, prefferedCost);
@@ -130,7 +127,6 @@ async function _getProductsByCategory(tag) {
   const API_KEY = process.env.RAINFOREST_API_KEY;
   const baseUrl = "https://api.rainforestapi.com";
   const endpoint = "/request";
-  const maxProducts = 2;
 
   const config = {
     headers: {
@@ -139,8 +135,7 @@ async function _getProductsByCategory(tag) {
     },
   };
 
-  const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}
-    &sort_by=price_low_to_high&pr_min=0&pr_max=1000`;
+  const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}&sort_by=price_low_to_high&pr_min=0&pr_max=1000`;
 
   const results = await axios.get(url, config);
 
@@ -185,8 +180,6 @@ async function askChatGPT(prompt) {
     temperature: 0,
   });
   let data = completion.data.choices[0].text.replace(/\n/g, "");
-  console.log("\n\n");
-  console.log(data);
 
   //parse data to json
   data = JSON.parse(data.trim());
