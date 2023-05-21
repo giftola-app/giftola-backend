@@ -62,6 +62,9 @@ const adminCategoriesRouter = require("./routes/admin/categories");
 const adminUsersRouter = require("./routes/admin/users");
 const adminInterestsRouter = require("./routes/admin/interests");
 const adminSettingsRouter = require("./routes/admin/settings");
+const adminEventsRouter = require("./routes/admin/events");
+const adminGroupsRouter = require("./routes/admin/groups");
+const adminQuestionsRouter = require("./routes/admin/questions");
 
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -117,7 +120,10 @@ app.use(
   /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products)/,
   attachAdminAndDb
 );
-app.use(/\/api\/v1\/admin\/(auth|categories|users|settings)/, attachAdminAndDb);
+app.use(
+  /\/api\/v1\/admin\/(auth|categories|users|settings|groups|events|questions)/,
+  attachAdminAndDb
+);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -154,6 +160,9 @@ app.use("/api/v1/admin/categories", adminAuthMiddleware, adminCategoriesRouter);
 app.use("/api/v1/admin/users", adminAuthMiddleware, adminUsersRouter);
 app.use("/api/v1/admin/interests", adminAuthMiddleware, adminInterestsRouter);
 app.use("/api/v1/admin/settings", adminAuthMiddleware, adminSettingsRouter);
+app.use("/api/v1/admin/events", adminAuthMiddleware, adminEventsRouter);
+app.use("/api/v1/admin/groups", adminAuthMiddleware, adminGroupsRouter);
+app.use("/api/v1/admin/questions", adminAuthMiddleware, adminQuestionsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
