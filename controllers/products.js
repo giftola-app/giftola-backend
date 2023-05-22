@@ -8,7 +8,7 @@ const contactsCollection = "contacts";
 const eventGiftsCollection = "eventGifts";
 
 const getProducts = async (req, res) => {
-  const { eventId, tag } = req.query;
+  const { eventId, tag, minPrice = 0.5, maxPrice = 1000 } = req.query;
 
   if (!eventId && !tag) {
     throw new BadRequestError(" eventId or tag is required");
@@ -17,7 +17,7 @@ const getProducts = async (req, res) => {
   }
 
   if (tag) {
-    const results = await _getProductsByCategory(tag);
+    const results = await _getProductsByTag(tag, minPrice, maxPrice);
     const data = results.data.search_results;
 
     data.forEach((item) => {
@@ -123,7 +123,7 @@ const getProducts = async (req, res) => {
   });
 };
 
-async function _getProductsByCategory(tag) {
+async function _getProductsByTag(tag, minPrice, maxPrice) {
   const API_KEY = process.env.RAINFOREST_API_KEY;
   const baseUrl = "https://api.rainforestapi.com";
   const endpoint = "/request";
@@ -135,7 +135,9 @@ async function _getProductsByCategory(tag) {
     },
   };
 
-  const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}&sort_by=price_low_to_high&pr_min=0&pr_max=1000`;
+  const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}&sort_by=price_low_to_high&pr_min=${minPrice}&pr_max=${maxPrice}`;
+
+  console.log(url);
 
   const results = await axios.get(url, config);
 
