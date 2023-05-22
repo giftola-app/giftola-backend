@@ -201,6 +201,75 @@ const inviteMember = async (req, res) => {
   });
 };
 
+const successTemplate = `<!DOCTYPE html>
+  <html>
+  <head>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+      <img src="https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media&token=3188bc94-30eb-4551-84b9-f1d4dbe7f7f4" alt="Giftola Logo" style="max-width: 100px;">
+      <h1 style="font-size: 28px; color: #333333; margin-top: 20px;">Welcome to the Group!</h1>
+      <p style="font-size: 24px; color: #333333; margin-top: 20px;">You have successfully joined the group.</p>
+    </div>
+  </body>
+  </html>
+  `;
+
+const notFoundTemplate = `<!DOCTYPE html>
+  <html>
+  <head>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+      <img src="https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media&token=3188bc94-30eb-4551-84b9-f1d4dbe7f7f4" alt="Giftola Logo" style="max-width: 100px;">
+      <h1 style="font-size: 28px; color: #333333; margin-top: 20px;">Group Does Not Exist</h1>
+      <p style="font-size: 24px; color: #333333; margin-top: 20px;">The group you are trying to access does not exist.</p>
+    </div>
+  </body>
+  </html>
+  `;
+
+const alreadyMemberTemplate = `<!DOCTYPE html>
+  <html>
+  <head>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+      <img src="https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media&token=3188bc94-30eb-4551-84b9-f1d4dbe7f7f4" alt="Giftola Logo" style="max-width: 100px;">
+      <h1 style="font-size: 28px; color: #333333; margin-top: 20px;">User is Already a Member</h1>
+      <p style="font-size: 24px; color: #333333; margin-top: 20px;">The user is already a member of the group.</p>
+    </div>
+  </body>
+  </html>
+  `;
+
 const acceptInvite = async (req, res) => {
   const { groupId, userId } = req.query;
 
@@ -211,24 +280,13 @@ const acceptInvite = async (req, res) => {
   const groupRef = await req.db.collection(groupsCollection).doc(groupId).get();
 
   if (!groupRef.exists) {
-    // throw new BadRequestError("Group doesn't exist");
-    return res.send("Group doesn't exist");
+    return res.send(notFoundTemplate);
   }
 
   const group = groupRef.data();
 
-  //   const userRef = await req.db.collection(usersCollection).doc(userId).get();
-
-  //   if (!userRef.exists) {
-  //     // throw new BadRequestError("User doesn't exist");
-  //    return res.send("User doesn't exist");
-  //   }
-
-  //   const user = userRef.data();
-
   if (group.members.includes(userId)) {
-    // throw new BadRequestError("User is already a member of the group");
-    return res.send("User is already a member of the group");
+    return res.send(alreadyMemberTemplate);
   }
 
   const updatedGroup = {
@@ -239,12 +297,7 @@ const acceptInvite = async (req, res) => {
 
   await groupRef.ref.update(updatedGroup);
 
-  //   res.status(StatusCodes.OK).json({
-  //     code: "accept_invite",
-  //     message: "Invite accepted successfully",
-  //     data: { id: groupRef.id, ...updatedGroup },
-  //   });
-  return res.send("Invite accepted successfully");
+  return res.send(successTemplate);
 };
 
 const getAllGroupMembers = async (req, res) => {
