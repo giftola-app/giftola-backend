@@ -129,7 +129,17 @@ app.use(
 
 // * Routes - User
 
-app.use("/api/v1/users/auth", userAuthRouter);
+app.use(
+  "/api/v1/users/auth",
+  (req, res, next) => {
+    if (req.path.includes("edit")) {
+      userAuthMiddleware(req, res, next);
+    } else {
+      next();
+    }
+  },
+  userAuthRouter
+);
 app.use("/api/v1/contacts", userAuthMiddleware, contactsRouter);
 app.use(
   "/api/v1/assets",

@@ -1,5 +1,5 @@
 const StatusCodes = require("http-status-codes");
-const { BadRequestError } = require("../errors");
+const { BadRequestError, NotFoundError } = require("../errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
@@ -10,7 +10,7 @@ const usersCollection = "users";
 const otpCollection = "otp";
 
 const register = async (req, res) => {
-  const { name, email } = req.body;
+  const { name, email, profileImage } = req.body;
   let { password } = req.body;
 
   _validateRegisterBody(name, email, password);
@@ -25,7 +25,7 @@ const register = async (req, res) => {
     email,
     password,
     verified: false,
-    profileImage: null,
+    profileImage: profileImage,
     createdAt: req.admin.firestore.Timestamp.now(),
     blocked: false,
     deletedAt: null,
@@ -90,6 +90,38 @@ const login = async (req, res) => {
       ...userData,
 
       token,
+    },
+  });
+};
+
+const editProfile = async (req, res) => {
+  const { name, profileImage } = req.body;
+
+  const user = await req.db.collection(usersCollection).doc(req.user.uid).get();
+
+  if (!user.exists) {
+    throw new NotFoundError("User not found");
+  }
+
+  const userData = await user.data();
+
+  const updatedUser = {
+    name: name || userData.name,
+    profileImage: profileImage || userData.profileImage,
+    updatedAt: req.admin.firestore.Timestamp.now(),
+  };
+
+  await req.db
+    .collection(usersCollection)
+    .doc(req.user.uid)
+    .update(updatedUser);
+
+  res.status(StatusCodes.OK).json({
+    code: "edit_profile",
+    message: "Profile updated successfully",
+    data: {
+      id: req.user.uid,
+      ...updatedUser,
     },
   });
 };
@@ -198,6 +230,7 @@ module.exports = {
   login,
   resendOtp,
   verifyOtp,
+  editProfile,
 };
 
 async function createAndSendOtp(req, userRef, user) {

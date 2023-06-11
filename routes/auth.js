@@ -6,13 +6,13 @@ const {
   login,
   resendOtp,
   verifyOtp,
-  saveGift,
-  getSavedGifts,
+  editProfile,
 } = require("../controllers/auth");
 
 router.post("/register", register);
 router.post("/login", login);
 router.post("/verify", verifyOtp);
 router.post("/resend", resendOtp);
+router.post("/edit", editProfile);
 
 module.exports = router;
