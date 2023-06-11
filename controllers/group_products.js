@@ -2,6 +2,8 @@ const StatusCodes = require("http-status-codes");
 const { BadRequestError } = require("../errors");
 
 const groupCollection = "groups";
+const listCollection = "lists";
+const productCollection = "products";
 
 const createGroupProduct = async (req, res) => {
   const {
@@ -11,6 +13,7 @@ const createGroupProduct = async (req, res) => {
     description,
     image,
     groupId,
+    listId,
     quantity,
     reservedBy,
   } = req.body;
@@ -28,7 +31,9 @@ const createGroupProduct = async (req, res) => {
   const groupProductRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
-    .collection("products")
+    .collection(listCollection)
+    .doc(listId)
+    .collection(productCollection)
     .add(groupProduct);
 
   res.status(StatusCodes.CREATED).json({
@@ -39,16 +44,24 @@ const createGroupProduct = async (req, res) => {
 };
 
 const getGroupProducts = async (req, res) => {
-  const groupId = req.params.id || req.query.id;
+  const groupId = req.params.groupId || req.query.groupId;
+  const listId = req.params.listId || req.query.listId;
 
   if (!groupId) {
     throw new BadRequestError("Group Id is required");
   }
 
+  if (!listId) {
+    throw new BadRequestError("List Id is required");
+  }
+
   const groupProductsRef = await req.db
+
     .collection(groupCollection)
     .doc(groupId)
-    .collection("products")
+    .collection(listCollection)
+    .doc(listId)
+    .collection(productCollection)
     .where("deletedAt", "==", null)
     .orderBy("createdAt", "desc")
     .get();
@@ -61,7 +74,7 @@ const getGroupProducts = async (req, res) => {
 
   res.status(StatusCodes.OK).json({
     code: "get_group_products",
-    message: "Group Products retrieved successfully",
+    message: "Group Products fetched successfully",
     data: groupProducts,
   });
 };
@@ -171,6 +184,7 @@ const _validateCreateGroupProductFields = ({
   description,
   image,
   groupId,
+  listId,
   quantity,
 }) => {
   switch (true) {
@@ -186,6 +200,8 @@ const _validateCreateGroupProductFields = ({
       throw new BadRequestError("Image is required");
     case !groupId:
       throw new BadRequestError("Group Id is required");
+    case !listId:
+      throw new BadRequestError("List Id is required");
     case !quantity:
       throw new BadRequestError("Quantity is required");
     default:

@@ -3,6 +3,8 @@ const { BadRequestError } = require("../errors");
 
 const groupsCollection = "groups";
 const usersCollection = "users";
+const listsCollection = "lists";
+const productsCollection = "products";
 
 const { sendGroupInvite } = require("../utils/send_mail");
 
@@ -68,6 +70,44 @@ const getGroups = async (req, res) => {
     }
 
     groups[i].members = members;
+
+    const lists = [];
+
+    const listsRef = await req.db
+      .collection(groupsCollection)
+      .doc(groups[i].id)
+      .collection(listsCollection)
+      .where("deletedAt", "==", null)
+      .orderBy("createdAt", "desc")
+      .get();
+    console.log("groupId: ", groups[i].id);
+
+    listsRef.forEach((list) => {
+      lists.push({ id: list.id, ...list.data() });
+    });
+
+    //get all list products
+    for (let j = 0; j < lists.length; j++) {
+      const products = [];
+
+      const productsRef = await req.db
+        .collection(groupsCollection)
+        .doc(groups[i].id)
+        .collection(listsCollection)
+        .doc(lists[j].id)
+        .collection(productsCollection)
+        .where("deletedAt", "==", null)
+        .orderBy("createdAt", "desc")
+        .get();
+
+      productsRef.forEach((product) => {
+        products.push({ id: product.id, ...product.data() });
+      });
+
+      lists[j].products = products;
+    }
+
+    groups[i].lists = lists;
   }
 
   res.status(StatusCodes.OK).json({
