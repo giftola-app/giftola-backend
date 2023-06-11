@@ -4,7 +4,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 
-const { sendVerificationOTP } = require("../utils/send_mail");
+const {
+  sendVerificationOTP,
+  sendForgotPasswordEmail,
+} = require("../utils/send_mail");
 
 const usersCollection = "users";
 const otpCollection = "otp";
@@ -225,12 +228,120 @@ const verifyOtp = async (req, res) => {
   });
 };
 
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new BadRequestError("Please provide an email");
+  }
+
+  const user = await req.db
+    .collection(usersCollection)
+    .where("email", "==", email)
+    .get();
+
+  if (user.empty) {
+    throw new BadRequestError("Invalid email");
+  }
+
+  const userRef = user.docs[0];
+  const userData = await userRef.data();
+
+  const salt = await bcrypt.genSalt(10);
+
+  const otp = otpGenerator.generate(6, {
+    upperCase: false,
+    specialChars: false,
+    alphabets: false,
+  });
+  const hashedOtp = bcrypt.hashSync(otp, salt);
+
+  const otpExpiry =
+    req.admin.firestore.Timestamp.now().seconds +
+    60 * process.env.OTP_EXPIRES_IN_MINUTES;
+
+  const otpData = {
+    hashedOtp,
+    otpExpiry,
+    userId: userRef.id,
+    userEmail: userData.email,
+    createdAt: req.admin.firestore.Timestamp.now(),
+  };
+
+  await req.db.collection(otpCollection).add(otpData);
+
+  await sendForgotPasswordEmail(userData.email, userData.name, otp);
+
+  res.status(StatusCodes.OK).json({
+    code: "forgot_password",
+    message: "OTP sent successfully",
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const { email, otp, password } = req.body;
+
+  if (!email || !otp || !password) {
+    switch (true) {
+      case !email:
+        throw new BadRequestError("Please provide an email");
+      case !otp:
+        throw new BadRequestError("Please provide an OTP");
+      case !password:
+        throw new BadRequestError("Please provide a password");
+      default:
+        break;
+    }
+  }
+
+  const otpData = await req.db
+    .collection(otpCollection)
+    .where("userEmail", "==", email)
+    .orderBy("createdAt", "desc")
+    .limit(1)
+    .get();
+
+  if (otpData.empty) {
+    throw new BadRequestError("Invalid OTP");
+  }
+
+  const otpRef = otpData.docs[0];
+  const otpDataObj = await otpRef.data();
+
+  if (otpDataObj.otpExpiry < req.admin.firestore.Timestamp.now().seconds) {
+    throw new BadRequestError("OTP expired");
+  }
+
+  const isMatch = await matchPassword(otp, otpDataObj.hashedOtp);
+
+  if (!isMatch) {
+    throw new BadRequestError("Invalid OTP");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  await otpRef.ref.delete();
+
+  await req.db.collection(usersCollection).doc(otpDataObj.userId).update({
+    password: hashedPassword,
+  });
+
+  res.status(StatusCodes.OK).json({
+    code: "reset_password",
+    message: "Password reset successfully",
+  });
+};
+
 module.exports = {
   register,
   login,
   resendOtp,
   verifyOtp,
   editProfile,
+  forgotPassword,
+  resetPassword,
 };
 
 async function createAndSendOtp(req, userRef, user) {

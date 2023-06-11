@@ -107,7 +107,20 @@ const getGroups = async (req, res) => {
       lists[j].products = products;
     }
 
-    groups[i].lists = lists;
+    // groups[i].lists = lists;
+
+    //based on createdBy field of list, append lists to members
+    for (let j = 0; j < members.length; j++) {
+      const memberLists = [];
+
+      for (let k = 0; k < lists.length; k++) {
+        if (lists[k].createdBy === members[j].id) {
+          memberLists.push(lists[k]);
+        }
+      }
+
+      members[j].lists = memberLists;
+    }
   }
 
   res.status(StatusCodes.OK).json({
@@ -312,10 +325,6 @@ const alreadyMemberTemplate = `<!DOCTYPE html>
 
 const acceptInvite = async (req, res) => {
   const { groupId, userId } = req.query;
-
-  console.log(req.query);
-
-  console.log(`groupId : ${groupId} , userId : ${userId}`);
 
   const groupRef = await req.db.collection(groupsCollection).doc(groupId).get();
 
