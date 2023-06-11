@@ -10,6 +10,8 @@ const createGroupList = async (req, res) => {
 
   _validateCreateGroupListFields(req.body);
 
+  await _checkIfMember(req, groupId);
+
   const groupList = {
     ...req.body,
     createdBy: req.user.uid,
@@ -37,6 +39,8 @@ const getGroupLists = async (req, res) => {
   if (!groupId) {
     throw new BadRequestError("Group Id is required");
   }
+
+  await _checkIfMember(req, groupId);
 
   const groupListsRef = await req.db
     .collection(groupCollection)
@@ -72,6 +76,8 @@ const getGroupList = async (req, res) => {
     throw new BadRequestError("List Id is required");
   }
 
+  await _checkIfMember(req, groupId);
+
   const groupListRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
@@ -105,6 +111,8 @@ const updateGroupList = async (req, res) => {
     throw new BadRequestError("List Id is required");
   }
 
+  await _checkIfMember(req, groupId);
+
   const groupListRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
@@ -114,11 +122,11 @@ const updateGroupList = async (req, res) => {
 
   if (!groupListRef.exists) {
     throw new NotFoundError("Group List not found");
+  } else if (groupListRef.data().createdBy !== req.user.uid) {
+    throw new BadRequestError("You are not authorized to update this list");
   }
 
   const { name, description, image } = req.body;
-
-  //   _validateUpdateGroupListFields(req.body);
 
   const groupList = {
     ...req.body,
@@ -145,6 +153,7 @@ const deleteGroupList = async (req, res) => {
     throw new BadRequestError("List Id is required");
   }
 
+  await _checkIfMember(req, groupId);
   const groupListRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
@@ -154,6 +163,8 @@ const deleteGroupList = async (req, res) => {
 
   if (!groupListRef.exists) {
     throw new NotFoundError("Group List not found");
+  } else if (groupListRef.data().createdBy !== req.user.uid) {
+    throw new BadRequestError("You are not authorized to delete this list");
   }
 
   await groupListRef.ref.update({
@@ -184,20 +195,6 @@ const _validateCreateGroupListFields = (body) => {
   }
 };
 
-const _validateUpdateGroupListFields = (body) => {
-  const { name, description, image } = body;
-
-  if (!name) {
-    throw new BadRequestError("Name is required");
-  }
-  if (!description) {
-    throw new BadRequestError("Description is required");
-  }
-  if (!image) {
-    throw new BadRequestError("Image is required");
-  }
-};
-
 module.exports = {
   createGroupList,
   getGroupLists,
@@ -205,6 +202,15 @@ module.exports = {
   updateGroupList,
   deleteGroupList,
 };
+async function _checkIfMember(req, groupId) {
+  const groupRef = await req.db.collection(groupCollection).doc(groupId).get();
+  if (!groupRef.exists) {
+    throw new NotFoundError("No such Group found");
+  } else if (!groupRef.data().members.includes(req.user.uid)) {
+    throw new BadRequestError("You are not a member of this group");
+  }
+}
+
 async function _attachProductsAlongList(groupLists, req, groupId) {
   for (let i = 0; i < groupLists.length; i++) {
     const groupList = groupLists[i];

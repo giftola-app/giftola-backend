@@ -80,7 +80,6 @@ const getGroups = async (req, res) => {
       .where("deletedAt", "==", null)
       .orderBy("createdAt", "desc")
       .get();
-    console.log("groupId: ", groups[i].id);
 
     listsRef.forEach((list) => {
       lists.push({ id: list.id, ...list.data() });
@@ -107,9 +106,6 @@ const getGroups = async (req, res) => {
       lists[j].products = products;
     }
 
-    // groups[i].lists = lists;
-
-    //based on createdBy field of list, append lists to members
     for (let j = 0; j < members.length; j++) {
       const memberLists = [];
 

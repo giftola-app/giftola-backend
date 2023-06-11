@@ -28,6 +28,10 @@ const createGroupProduct = async (req, res) => {
     deletedAt: null,
   };
 
+  await _checkGroupMembership(req, groupId);
+
+  await _checkListWriteAccess(req, groupId, listId);
+
   const groupProductRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
@@ -55,6 +59,8 @@ const getGroupProducts = async (req, res) => {
     throw new BadRequestError("List Id is required");
   }
 
+  await _checkGroupMembership(req, groupId);
+
   const groupProductsRef = await req.db
 
     .collection(groupCollection)
@@ -81,13 +87,18 @@ const getGroupProducts = async (req, res) => {
 
 const getGroupProduct = async (req, res) => {
   const groupId = req.params.groupId || req.query.groupId;
-  const groupProductId = req.params.productId || req.query.productId;
+  const listId = req.params.listId || req.query.listId;
+  const productId = req.params.productId || req.query.productId;
+
+  await _checkGroupMembership(req, groupId);
 
   const groupProductRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
-    .collection("products")
-    .doc(groupProductId)
+    .collection(listCollection)
+    .doc(listId)
+    .collection(productCollection)
+    .doc(productId)
     .get();
 
   _verifyExistance(groupProductRef);
@@ -105,13 +116,18 @@ const getGroupProduct = async (req, res) => {
 
 const updateGroupProduct = async (req, res) => {
   const groupId = req.params.groupId || req.query.groupId;
-  const groupProductId = req.params.productId || req.query.productId;
+  const listId = req.params.listId || req.query.listId;
+  const productId = req.params.productId || req.query.productId;
+
+  await _checkGroupMembership(req, groupId);
 
   const groupProductRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
-    .collection("products")
-    .doc(groupProductId)
+    .collection(listCollection)
+    .doc(listId)
+    .collection(productCollection)
+    .doc(productId)
     .get();
 
   _verifyExistance(groupProductRef);
@@ -151,6 +167,10 @@ const deleteGroupProduct = async (req, res) => {
     default:
       break;
   }
+
+  await _checkGroupMembership(req, groupId);
+
+  await _checkListWriteAccess(req, groupId, listId);
 
   const groupProductRef = await req.db
     .collection(groupCollection)
@@ -222,3 +242,31 @@ module.exports = {
   updateGroupProduct,
   deleteGroupProduct,
 };
+async function _checkListWriteAccess(req, groupId, listId) {
+  const listRef = await req.db
+    .collection(groupCollection)
+    .doc(groupId)
+    .collection(listCollection)
+    .doc(listId)
+    .get();
+
+  const listData = listRef.data();
+
+  if (!listData) {
+    throw new BadRequestError("List does not exist");
+  } else if (!listData.createdBy === req.user.uid) {
+    throw new BadRequestError("User is not the owner of this list");
+  }
+}
+
+async function _checkGroupMembership(req, groupId) {
+  const groupRef = await req.db.collection(groupCollection).doc(groupId).get();
+
+  const groupData = groupRef.data();
+
+  if (!groupData) {
+    throw new BadRequestError("Group does not exist");
+  } else if (!groupData.members.includes(req.user.uid)) {
+    throw new BadRequestError("User is not a member of this group");
+  }
+}

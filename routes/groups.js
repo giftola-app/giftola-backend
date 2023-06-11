@@ -26,7 +26,7 @@ const {
   getGroupProduct,
   updateGroupProduct,
   deleteGroupProduct,
-} = require("../controllers/group_products");
+} = require("../controllers/group_list_products");
 
 router
   .route("/lists")
