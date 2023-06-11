@@ -119,6 +119,15 @@ const updateGroupProduct = async (req, res) => {
   const listId = req.params.listId || req.query.listId;
   const productId = req.params.productId || req.query.productId;
 
+  switch (true) {
+    case !groupId:
+      throw new BadRequestError("Group Id is required");
+    case !listId:
+      throw new BadRequestError("List Id is required");
+    case !productId:
+      throw new BadRequestError("Product Id is required");
+  }
+
   await _checkGroupMembership(req, groupId);
 
   const groupProductRef = await req.db
@@ -157,15 +166,16 @@ const updateGroupProduct = async (req, res) => {
 
 const deleteGroupProduct = async (req, res) => {
   const groupId = req.params.groupId || req.query.groupId;
-  const groupProductId = req.params.productId || req.query.productId;
+  const listId = req.params.listId || req.query.listId;
+  const productId = req.params.productId || req.query.productId;
 
   switch (true) {
     case !groupId:
       throw new BadRequestError("Group Id is required");
-    case !groupProductId:
-      throw new BadRequestError("Group Product Id is required");
-    default:
-      break;
+    case !listId:
+      throw new BadRequestError("List Id is required");
+    case !productId:
+      throw new BadRequestError("Product Id is required");
   }
 
   await _checkGroupMembership(req, groupId);
@@ -175,8 +185,10 @@ const deleteGroupProduct = async (req, res) => {
   const groupProductRef = await req.db
     .collection(groupCollection)
     .doc(groupId)
-    .collection("products")
-    .doc(groupProductId)
+    .collection(listCollection)
+    .doc(listId)
+    .collection(productCollection)
+    .doc(productId)
     .get();
 
   _verifyExistance(groupProductRef);
