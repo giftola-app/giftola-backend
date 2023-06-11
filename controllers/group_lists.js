@@ -1,4 +1,4 @@
-const StatusCodes = require("http-status-codes");
+const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
 const groupCollection = "groups";
