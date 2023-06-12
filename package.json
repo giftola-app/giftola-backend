@@ -1,6 +1,6 @@
 {
   "name": "giftola-backend",
-  "version": "0.10.1",
+  "version": "0.11.1",
   "description": "Backend for Giftola Mobile app",
   "main": "index.js",
   "engines": {

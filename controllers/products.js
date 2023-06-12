@@ -7,6 +7,9 @@ const eventsCollection = "events";
 const contactsCollection = "contacts";
 const eventGiftsCollection = "eventGifts";
 
+const settingsCollection = "settings";
+const settingsDoc = "giftola-settings";
+
 const getProducts = async (req, res) => {
   const { eventId, tag, minPrice = 0.5, maxPrice = 1000 } = req.query;
 
@@ -16,12 +19,28 @@ const getProducts = async (req, res) => {
     throw new BadRequestError(" eventId and tag cannot be used together");
   }
 
+  const settingsRef = await req.db
+    .collection(settingsCollection)
+    .doc(settingsDoc)
+    .get();
+
+  if (!settingsRef.exists) {
+    throw new BadRequestError("Settings does not exist");
+  }
+
+  const settingsData = settingsRef.data();
+
   if (tag) {
-    const results = await _getProductsByTag(tag, minPrice, maxPrice);
+    const results = await _getProductsByTag(
+      settingsData,
+      tag,
+      minPrice,
+      maxPrice
+    );
     const data = results.data.search_results;
 
     data.forEach((item) => {
-      item.link = `${item.link}${process.env.AFFILIATE_TAG}`;
+      item.link = `${item.link}&tag=${settingsData.AFFILIATE_TAG}`;
     });
 
     res.status(StatusCodes.OK).json({
@@ -73,24 +92,27 @@ const getProducts = async (req, res) => {
   const preferences = contactsDoc.preferences;
   const dob = contactsDoc.dob;
   const prefferedCost = eventDoc.prefferedCost;
-  const noOfGifts = process.env.NO_OF_GIFTS_CHATGPT;
-  // const preff
+  const noOfGifts = settingsData.NO_OF_GIFTS_CHATGPT;
 
-  const prompt = `Generate a list of ${noOfGifts} gift ideas with brand name and price in JSON format for a person with the following characteristics:Preferences:${JSON.stringify(
-    preferences
-  )}, Preffered Cost: ${prefferedCost}, Date of Birth: ${dob}, Interests:
-    [${interests}]. Give answer in JSON format like this:
-    [{"name": "Product 1",
-            "brand": "Brand 1"},
-            {"name": "Product 2",
-                "brand": "Brand 2"}]`;
+  let prompt = settingsData.CHATGPT_PROMPT;
 
-  const ideaList = await askChatGPT(prompt);
+  prompt = prompt.replace("{{noOfGifts}}", noOfGifts);
+  prompt = prompt.replace("{{preferences}}", JSON.stringify(preferences));
+  prompt = prompt.replace("{{prefferedCost}}", prefferedCost);
+  prompt = prompt.replace("{{dob}}", dob);
+  prompt = prompt.replace("{{interests}}", interests);
 
-  const results = await _getRainforestProducts(ideaList, prefferedCost);
+  //(`Prompt: ${prompt}`);
+
+  const ideaList = await askChatGPT(settingsData, prompt);
+
+  const results = await _getRainforestProducts(
+    settingsData,
+    ideaList,
+    prefferedCost
+  );
   const data = results.map((result) => result.data);
 
-  // get top 10 items from each result
   data.forEach((result) => {
     result.search_results = result.search_results.slice(0, 10);
   });
@@ -100,6 +122,7 @@ const getProducts = async (req, res) => {
     result.search_results.forEach((item) => {
       item.id = Math.floor(Math.random() * 1000000);
       item.createdAt = giftCreationDate;
+      item.link = `${item.link}&tag=${settingsData.AFFILIATE_TAG}`;
     });
   });
 
@@ -123,8 +146,8 @@ const getProducts = async (req, res) => {
   });
 };
 
-async function _getProductsByTag(tag, minPrice, maxPrice) {
-  const API_KEY = process.env.RAINFOREST_API_KEY;
+async function _getProductsByTag(settingsData, tag, minPrice, maxPrice) {
+  const API_KEY = settingsData.RAINFOREST_KEY;
   const baseUrl = "https://api.rainforestapi.com";
   const endpoint = "/request";
 
@@ -137,15 +160,13 @@ async function _getProductsByTag(tag, minPrice, maxPrice) {
 
   const url = `${baseUrl}${endpoint}?api_key=${API_KEY}&type=search&amazon_domain=amazon.com&search_term=${tag}&sort_by=price_low_to_high&pr_min=${minPrice}&pr_max=${maxPrice}`;
 
-  console.log(url);
-
   const results = await axios.get(url, config);
 
   return results;
 }
 
-async function _getRainforestProducts(ideaList, prefferedCost) {
-  const API_KEY = process.env.RAINFOREST_API_KEY;
+async function _getRainforestProducts(settingsData, ideaList, prefferedCost) {
+  const API_KEY = settingsData.RAINFOREST_KEY;
   const baseUrl = "https://api.rainforestapi.com";
   const endpoint = "/request";
   const maxProducts = 2;
@@ -169,22 +190,27 @@ async function _getRainforestProducts(ideaList, prefferedCost) {
   return results;
 }
 
-async function askChatGPT(prompt) {
+async function askChatGPT(settingsData, prompt) {
+  //(`OpenAI Key: ${settingsData.OPENAI_KEY}`);
   const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: settingsData.OPENAI_KEY,
   });
   const openai = new OpenAIApi(configuration);
 
-  const completion = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt,
-    max_tokens: 1000,
-    temperature: 0,
+  //(`OpenAI: ${openai}`);
+
+  const completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
   });
-  let data = completion.data.choices[0].text.replace(/\n/g, "");
+  let data = completion.data.choices[0].message.content;
+
+  //(`Data: ${data}`);
 
   //parse data to json
-  data = JSON.parse(data.trim());
+  data = JSON.parse(data.trim().replace(/'/g, '"'));
+
+  //(`Parsed Data: ${data}`);
 
   return data;
 }

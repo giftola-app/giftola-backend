@@ -2,7 +2,6 @@ const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../../errors");
 
 const settingsCollection = "settings";
-
 const settingsDoc = "giftola-settings";
 
 const getSettings = async (req, res) => {
