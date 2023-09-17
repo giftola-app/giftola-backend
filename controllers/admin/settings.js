@@ -53,8 +53,8 @@ const resetDefaultSettings = async (req, res) => {
     AFFILIATE_TAG: "saad0259-20",
     NO_OF_GIFTS_CHATGPT: 3,
     RAINFOREST_GIFTS: 20,
-    OPENAI_KEY: "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",
-    RAINFOREST_KEY: "372527ECFD854A1399FA3CCD6C74BEA8",
+    OPENAI_KEY: "sk-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",
+    RAINFOREST_KEY: "ED62BC3E53704A0BBAAEF403C88C95CE",
     CHATGPT_PROMPT: `Generate a list of {{noOfGifts}} gift ideas with brand
      name and price in JSON format for a person with the following characteristics:
       Preferences:{{preferences}} , Preffered Cost: {{preferredCost}},
