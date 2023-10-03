@@ -103,8 +103,13 @@ const getProducts = async (req, res) => {
   prompt = prompt.replace("{{interests}}", interests);
 
   //(`Prompt: ${prompt}`);
+  console.log("before asking chatgpt");
+
+  console.log("settingsData.OPENAI_KEY", settingsData.OPENAI_KEY);
 
   const ideaList = await askChatGPT(settingsData, prompt);
+
+  console.log("after asking chatgpt");
 
   const results = await _getRainforestProducts(
     settingsData,

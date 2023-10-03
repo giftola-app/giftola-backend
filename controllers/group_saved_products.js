@@ -1,7 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError } = require("../errors");
 
-const savedGiftsCollection = "savedGifts";
+const savedGiftsCollection = "groupSavedGifts";
 
 const saveGift = async (req, res) => {
   const { title, asin, price, image, link } = req.body;

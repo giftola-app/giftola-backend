@@ -54,7 +54,8 @@ const questionsRouter = require("./routes/questions");
 const productsRouter = require("./routes/products");
 const categoriesRouter = require("./routes/categories");
 const groupsRouter = require("./routes/groups");
-const savedProductsRouter = require("./routes/saved_products");
+const savedProductsRouter = require("./routes/group_saved_products");
+const savedGiftIdeasRouter = require("./routes/saved_gift_idea");
 
 //* Routes-Admin
 const adminAuthRouter = require("./routes/admin/auth");
@@ -117,7 +118,7 @@ function attachAdminAndDb(req, res, next) {
 }
 
 app.use(
-  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products)/,
+  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products|saved-gift-ideas)/,
   attachAdminAndDb
 );
 app.use(
@@ -173,6 +174,7 @@ app.use("/api/v1/admin/settings", adminAuthMiddleware, adminSettingsRouter);
 app.use("/api/v1/admin/events", adminAuthMiddleware, adminEventsRouter);
 app.use("/api/v1/admin/groups", adminAuthMiddleware, adminGroupsRouter);
 app.use("/api/v1/admin/questions", adminAuthMiddleware, adminQuestionsRouter);
+app.use("/api/v1/saved-gift-ideas", userAuthMiddleware, savedGiftIdeasRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

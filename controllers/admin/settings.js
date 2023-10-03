@@ -7,6 +7,7 @@ const { Configuration, OpenAIApi } = require("openai");
 
 const settingsCollection = "settings";
 const settingsDoc = "giftola-settings";
+const defaultSettingsDoc = "default-settings";
 
 const getSettings = async (req, res) => {
   const settingsRef = await req.db
@@ -49,29 +50,36 @@ const updateSettings = async (req, res) => {
 };
 
 const resetDefaultSettings = async (req, res) => {
-  const settings = {
-    AFFILIATE_TAG: "saad0259-20",
-    NO_OF_GIFTS_CHATGPT: 3,
-    RAINFOREST_GIFTS: 20,
-    OPENAI_KEY: "sk-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",
-    RAINFOREST_KEY: "ED62BC3E53704A0BBAAEF403C88C95CE",
-    CHATGPT_PROMPT: `Generate a list of {{noOfGifts}} gift ideas with brand
-     name and price in JSON format for a person with the following characteristics:
-      Preferences:{{preferences}} , Preffered Cost: {{preferredCost}},
-       Date of Birth: {{dob}}, Interests:{{interests}}.
-        Give answer in JSON format like this:[{"name": "Product 1","brand": "Brand 1"},
-        {"name": "Product 2","brand": "Brand 2"}]`,
-  };
+  //get and display default settings
+  const defaultSettingsRef = await req.db
+    .collection(settingsCollection)
+    .doc(defaultSettingsDoc)
+    .get();
 
-  await req.db
+  if (!defaultSettingsRef.exists) {
+    throw new BadRequestError("Default settings does not exist");
+  }
+
+  const defaultSettingsData = defaultSettingsRef.data();
+
+  //update settings with default settings
+  const settingsRef = await req.db
     .collection(settingsCollection)
     .doc(settingsDoc)
-    .set(settings, { merge: true });
+    .get();
+
+  if (!settingsRef.exists) {
+    throw new BadRequestError("Settings does not exist");
+  }
+
+  const settings = { ...defaultSettingsData };
+
+  await settingsRef.ref.update(settings);
 
   res.status(StatusCodes.OK).json({
-    code: "reset_settings",
-    message: "Settings reset successfully",
-    data: { id: settingsDoc },
+    code: "reset_default_settings",
+    message: "Settings reset to default successfully",
+    data: { id: settingsRef.id },
   });
 };
 
