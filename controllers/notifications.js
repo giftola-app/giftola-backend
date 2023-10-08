@@ -51,8 +51,6 @@ const getNotifications = async (req, res) => {
 };
 
 const readAllNotifications = async (req, res) => {
-  //read all unread notifications
-
   const notificationsRef = await req.db
     .collection(notificationsCollection)
     .where("userId", "==", req.user.uid)
@@ -74,3 +72,16 @@ const readAllNotifications = async (req, res) => {
     message: "Notifications read successfully",
   });
 };
+
+const _validateCreateNotificationFields = (notification) => {
+  switch (true) {
+    case !notification.title:
+      throw new BadRequestError("Title is required");
+    case !notification.message:
+      throw new BadRequestError("Message is required");
+    case !notification.type:
+      throw new BadRequestError("Type is required");
+  }
+};
+
+module.exports = { createNotification, getNotifications, readAllNotifications };

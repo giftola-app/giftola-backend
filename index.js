@@ -56,6 +56,7 @@ const categoriesRouter = require("./routes/categories");
 const groupsRouter = require("./routes/groups");
 const savedProductsRouter = require("./routes/group_saved_products");
 const savedGiftIdeasRouter = require("./routes/saved_gift_idea");
+const notificationsRouter = require("./routes/notifications");
 
 //* Routes-Admin
 const adminAuthRouter = require("./routes/admin/auth");
@@ -118,7 +119,7 @@ function attachAdminAndDb(req, res, next) {
 }
 
 app.use(
-  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products|saved-gift-ideas)/,
+  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products|saved-gift-ideas|notifications)/,
   attachAdminAndDb
 );
 app.use(
@@ -164,6 +165,7 @@ app.use(
   groupsRouter
 );
 app.use("/api/v1/saved-products", userAuthMiddleware, savedProductsRouter);
+app.use("/api/v1/notifications", userAuthMiddleware, notificationsRouter);
 
 // * Routes - Admin
 app.use("/api/v1/admin/auth", adminAuthRouter);
