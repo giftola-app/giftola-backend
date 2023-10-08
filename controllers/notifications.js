@@ -4,7 +4,6 @@ const { UnauthenticatedError, BadRequestError } = require("../errors");
 const notificationsCollection = "notifications";
 
 const createNotification = async (req, res, respond = true) => {
-  const { title, message, type } = req.body;
   _validateCreateNotificationFields(req.body);
 
   const notification = {
