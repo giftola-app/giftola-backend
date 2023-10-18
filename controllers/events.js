@@ -3,7 +3,7 @@ const { UnauthenticatedError, BadRequestError } = require("../errors");
 
 const eventsCollection = "events";
 
-const createEvent = async (req, res) => {
+const createEvent = async (req, res, respond = true) => {
   const {
     title,
     date,
@@ -12,7 +12,6 @@ const createEvent = async (req, res) => {
     coverImage,
     prefferedCost,
     createdFor,
-
     status,
   } = req.body;
 
@@ -27,11 +26,15 @@ const createEvent = async (req, res) => {
 
   const eventRef = await req.db.collection(eventsCollection).add(event);
 
-  res.status(StatusCodes.CREATED).json({
-    code: "create_event",
-    message: "Event created successfully",
-    data: { id: eventRef.id, ...event },
-  });
+  if (respond) {
+    res.status(StatusCodes.CREATED).json({
+      code: "create_event",
+      message: "Event created successfully",
+      data: { id: eventRef.id, ...event },
+    });
+  } else {
+    return { id: eventRef.id, ...event };
+  }
 };
 
 const getEvents = async (req, res) => {

@@ -1,7 +1,10 @@
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-const sendVerificationOTP = async (email, name, otp) => {
-  const senderEmail = "Welcome to Giftola <info@giftola.com>";
+const settingsCollection = "settings";
+const settingsDoc = "giftola-settings";
+
+const sendVerificationOTP = async (db, email, name, otp) => {
   const subject = "Verify your account";
   const content = `<!DOCTYPE html>
   <html>
@@ -42,16 +45,16 @@ const sendVerificationOTP = async (email, name, otp) => {
   </html>
   `;
 
-  await sendMail(email, senderEmail, subject, content);
+  await sendMail(db, email, subject, content);
 };
 
 const sendGroupInvite = async (
+  db,
   email,
   name,
   groupName,
   acceptInvitationLink
 ) => {
-  const senderEmail = "Giftola < info@giftola.com>";
   const subject = "You have been invited to a group";
   const content = ` 
   <!DOCTYPE html>
@@ -98,11 +101,10 @@ const sendGroupInvite = async (
 
   </html>
   `;
-  await sendMail(email, senderEmail, subject, content);
+  await sendMail(db, email, subject, content);
 };
 
-const sendForgotPasswordEmail = async (email, name, otp) => {
-  const senderEmail = "Giftola Support <support@giftola.com>";
+const sendForgotPasswordEmail = async (db, email, name, otp) => {
   const subject = "Forgot Password";
   const content = `<!DOCTYPE html>
   <html>
@@ -143,29 +145,62 @@ const sendForgotPasswordEmail = async (email, name, otp) => {
   </html>
   `;
 
-  await sendMail(email, senderEmail, subject, content);
+  await sendMail(db, email, subject, content);
 };
 
-const sendMail = async (email, senderEmail, subject, content) => {
-  const transporter = nodemailer.createTransport({
-    service: process.env.SMTP_SERVICE,
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
+const sendTestEmail = async (db) => {
+  const subject = "Test Email";
+  const content = `This is a test email sent from Giftola. If you are seeing this, it means that the email service is working fine.`;
+  const email = "saad.dev@yopmail.com";
 
-  let info = await transporter.sendMail({
-    from: senderEmail,
-    to: email,
-    subject: subject,
-    html: content,
-  });
-  return info;
+  await sendMail(db, email, subject, content);
+};
+
+const sendMail = async (db, email, subject, content) => {
+  const senderEmail = "support@giftola.app";
+  const senderName = "Giftola Support";
+  const settingsRef = await db
+    .collection(settingsCollection)
+    .doc(settingsDoc)
+    .get();
+
+  if (!settingsRef.exists) {
+    throw new BadRequestError("Settings does not exist");
+  }
+  const settingsData = settingsRef.data();
+  const brevoApiKey = settingsData.BREVO_KEY;
+
+  const response = await axios.post(
+    "https://api.brevo.com/v3/smtp/email",
+    {
+      sender: {
+        name: senderName,
+        email: senderEmail,
+      },
+      to: [
+        {
+          email: email,
+        },
+      ],
+      subject: subject,
+      htmlContent: content,
+    },
+
+    {
+      headers: {
+        "api-key": brevoApiKey,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+    }
+  );
+
+  return response;
 };
 
 module.exports = {
   sendVerificationOTP,
   sendGroupInvite,
   sendForgotPasswordEmail,
+  sendTestEmail,
 };

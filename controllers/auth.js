@@ -3,6 +3,10 @@ const { BadRequestError, NotFoundError } = require("../errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
+const moment = require("moment");
+
+const { createContact } = require("./contacts");
+const { createEvent } = require("./events");
 
 const {
   sendVerificationOTP,
@@ -35,8 +39,6 @@ const register = async (req, res) => {
   };
 
   const userRef = await req.db.collection(usersCollection).add(user);
-
-  // const token = createJWT(userRef.id, name, "user");
 
   delete user.password;
 
@@ -216,6 +218,52 @@ const verifyOtp = async (req, res) => {
 
   const token = createJWT(otpDataObj.userId, user.name, "user");
 
+  const demoContact = {
+    profileImage:
+      "https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media",
+    name: "John Doe",
+    email: "johndoe@yopmail.com",
+    phone: "+919876543210",
+    dob: "2007-04-29T12:05:15.002Z",
+    address: "123, Street",
+    city: "City",
+    state: "State",
+    zipCode: "123456",
+  };
+
+  let reqData = {
+    body: demoContact,
+    user: {
+      uid: otpDataObj.userId,
+    },
+    db: req.db,
+    admin: req.admin,
+  };
+
+  const contact = await createContact(reqData, res, false);
+  const futureDateString = getFutureDate(10);
+  const demoEvent = {
+    title: "John's Birthday",
+    date: futureDateString,
+    description: "John's Birthday",
+    venue: "John's Residence",
+    coverImage:
+      "https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media",
+    prefferedCost: 20,
+    createdFor: contact.id,
+  };
+
+  reqData = {
+    body: demoEvent,
+    user: {
+      uid: otpDataObj.userId,
+    },
+    db: req.db,
+    admin: req.admin,
+  };
+
+  const event = await createEvent(reqData, res, false);
+
   res.status(StatusCodes.OK).json({
     code: "verify_otp",
 
@@ -270,7 +318,7 @@ const forgotPassword = async (req, res) => {
 
   await req.db.collection(otpCollection).add(otpData);
 
-  await sendForgotPasswordEmail(userData.email, userData.name, otp);
+  await sendForgotPasswordEmail(req.db, userData.email, userData.name, otp);
 
   res.status(StatusCodes.OK).json({
     code: "forgot_password",
@@ -368,7 +416,7 @@ async function createAndSendOtp(req, userRef, user) {
 
   await req.db.collection(otpCollection).add(otpData);
 
-  await sendVerificationOTP(user.email, user.name, otp);
+  await sendVerificationOTP(req.db, user.email, user.name, otp);
 }
 
 function matchPassword(password, userPassword) {
@@ -418,4 +466,9 @@ function _validateRegisterBody(name, email, password) {
         break;
     }
   }
+}
+
+function getFutureDate(daysFromNow) {
+  const futureDate = moment().add(daysFromNow, "days");
+  return futureDate.format("MMMM DD, YYYY::HH:mm A");
 }

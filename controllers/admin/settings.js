@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../../errors");
+const { sendTestEmail } = require("../../utils/send_mail");
 
 const axios = require("axios");
 
@@ -128,6 +129,15 @@ const checkRainforestApiKeyValidity = async (req, res) => {
   });
 };
 
+const testBrevoApiKeys = async (req, res) => {
+  const response = await sendTestEmail(req.db);
+
+  res.status(StatusCodes.OK).json({
+    message: "Brevo key is valid",
+    data: { response },
+  });
+};
+
 async function _getRainforestProducts(settingsData) {
   const API_KEY = settingsData.RAINFOREST_KEY;
   const baseUrl = "https://api.rainforestapi.com";
@@ -173,4 +183,5 @@ module.exports = {
   resetDefaultSettings,
   checkOpenApiKeyValidity,
   checkRainforestApiKeyValidity,
+  testBrevoApiKeys,
 };

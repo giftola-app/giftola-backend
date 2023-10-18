@@ -4,7 +4,7 @@ const { UnauthenticatedError, BadRequestError } = require("../errors");
 const contactsCollection = "contacts";
 const eventsCollection = "events";
 
-const createContact = async (req, res) => {
+const createContact = async (req, res, respond = true) => {
   const {
     profileImage,
     name,
@@ -28,11 +28,14 @@ const createContact = async (req, res) => {
   };
   const contactRef = await req.db.collection(contactsCollection).add(contact);
 
-  res.status(StatusCodes.CREATED).json({
-    code: "create_contact",
-    message: "Contact created successfully",
-    data: { id: contactRef.id, ...contact },
-  });
+  if (respond) {
+    return res.status(StatusCodes.CREATED).json({
+      code: "create_contact",
+      message: "Contact created successfully",
+      data: { id: contactRef.id, ...contact },
+    });
+  }
+  return { id: contactRef.id, ...contact };
 };
 
 const getContacts = async (req, res) => {

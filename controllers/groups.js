@@ -241,7 +241,13 @@ const inviteMember = async (req, res) => {
 
   const acceptInviteUrl = `${currentUrl}/accept-invite?groupId=${groupId}&userId=${userId}`;
 
-  await sendGroupInvite(user.email, user.name, group.name, acceptInviteUrl);
+  await sendGroupInvite(
+    req.db,
+    user.email,
+    user.name,
+    group.name,
+    acceptInviteUrl
+  );
 
   res.status(StatusCodes.OK).json({
     code: "invite_member",
