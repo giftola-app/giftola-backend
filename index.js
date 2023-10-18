@@ -170,7 +170,7 @@ app.use(
 );
 app.use("/api/v1/saved-products", userAuthMiddleware, savedProductsRouter);
 app.use("/api/v1/notifications", userAuthMiddleware, notificationsRouter);
-app.use("/api/v1/books", userAuthMiddleware, booksRouter);
+app.use("/api/v1/books", booksRouter);
 
 // * Routes - Admin
 app.use("/api/v1/admin/auth", adminAuthRouter);
