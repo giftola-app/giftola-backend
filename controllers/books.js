@@ -3,8 +3,10 @@ const { BadRequestError } = require("../errors");
 
 const booksCategoriesCollection = "bookCategories";
 const booksCollection = "books";
+const settingsCollection = "settings";
+const settingsDoc = "giftola-settings";
 
-const getBooksCategories = async (req, res) => {
+const getBooksCategories = async (req, res, respond = true) => {
   const booksCategories = await req.db
     .collection(booksCategoriesCollection)
     .where("deletedAt", "==", null)
@@ -17,12 +19,14 @@ const getBooksCategories = async (req, res) => {
       ...doc.data(),
     });
   });
-
-  res.status(StatusCodes.OK).json({
-    code: "get_books_categories",
-    message: "Books categories retrieved successfully",
-    data: results,
-  });
+  if (respond) {
+    res.status(StatusCodes.OK).json({
+      code: "get_books_categories",
+      message: "Books categories retrieved successfully",
+      data: results,
+    });
+  }
+  return results;
 };
 
 const createBooksCategory = async (req, res) => {
@@ -113,9 +117,116 @@ const _validateBook = (book) => {
   }
 };
 
+const populateBooks = async (req, res) => {
+  const bookCategories = await getBooksCategories(req, res, false);
+
+  const settingsRef = await req.db
+    .collection(settingsCollection)
+    .doc(settingsDoc)
+    .get();
+
+  if (!settingsRef.exists) {
+    throw new BadRequestError("Settings does not exist");
+  }
+
+  const settingsData = settingsRef.data();
+
+  const rainforestApiKey = settingsData.RAINFOREST_KEY;
+
+  try {
+    for (let i = 0; i < bookCategories.length; i++) {
+      const category = bookCategories[i];
+
+      const books = await _getBooksFromRainforest(
+        category.url,
+        rainforestApiKey,
+        category.id,
+        req
+      );
+
+      await _populateBooks(books, req);
+
+      console.log("books populated for category", category.name);
+    }
+  } catch (error) {
+    console.log("error", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      code: "populate_books",
+      message: "Error populating books",
+      data: {},
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    code: "populate_books",
+    message: "Books populated successfully",
+    data: {},
+  });
+};
+
+const _getBooksFromRainforest = async (url, apiKey, categoryId, req) => {
+  const rainforestUrl = `https://api.rainforestapi.com/request?api_key=${apiKey}&type=bestsellers&url=${url}`;
+
+  const response = await fetch(rainforestUrl);
+  const data = await response.json();
+
+  let bestSellers = data.bestsellers;
+
+  bestSellers = bestSellers.slice(0, 10);
+
+  const books = _parseRainforestResponse(bestSellers, categoryId, req);
+
+  return books;
+};
+
+const _parseRainforestResponse = (bestSellers, categoryId, req) => {
+  const books = [];
+
+  const now = req.admin.firestore.Timestamp.now();
+
+  for (let i = 0; i < bestSellers.length; i++) {
+    const bestSeller = bestSellers[i];
+
+    const book = {
+      srNumber: bestSeller.rank ?? 0,
+      name: bestSeller.title ?? "",
+      ratingValue: bestSeller.rating?.value ?? 0,
+      ratingCount: bestSeller.ratings_total ?? 0,
+
+      author: bestSeller.sub_title?.text ?? bestSeller.variant,
+
+      url: bestSeller.link ?? "",
+      imageUrl: bestSeller.image ?? "",
+      price: bestSeller.price?.raw ?? 0,
+      type: "book",
+      categoryId: categoryId,
+      createdAt: now,
+      deletedAt: null,
+    };
+
+    books.push(book);
+  }
+
+  return books;
+};
+
+const _populateBooks = async (books, req) => {
+  const batch = req.db.batch();
+
+  books.forEach((book) => {
+    const newBookRef = req.db.collection(booksCollection).doc();
+    batch.set(newBookRef, {
+      ...book,
+    });
+  });
+
+  await batch.commit();
+};
+
 module.exports = {
   getBooksCategories,
   createBooksCategory,
   getBooks,
   createBook,
+  populateBooks,
 };

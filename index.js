@@ -146,7 +146,10 @@ app.use(
 app.use("/api/v1/contacts", userAuthMiddleware, contactsRouter);
 app.use(
   "/api/v1/assets",
-  [upload.single("image"), userAuthMiddleware],
+  [
+    upload.single("image"),
+    // userAuthMiddleware
+  ],
   assetsRouter
 );
 app.use("/api/v1/events", userAuthMiddleware, eventsRouter);
