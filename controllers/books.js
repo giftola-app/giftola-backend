@@ -145,8 +145,6 @@ const populateBooks = async (req, res) => {
       );
 
       await _populateBooks(books, req);
-
-      console.log("books populated for category", category.name);
     }
   } catch (error) {
     console.log("error", error);
@@ -223,10 +221,36 @@ const _populateBooks = async (books, req) => {
   await batch.commit();
 };
 
+const lastDataRefreshDate = async (req, res) => {
+  const books = await req.db
+    .collection(booksCollection)
+    .where("deletedAt", "==", null)
+    .orderBy("createdAt", "desc")
+    .limit(1)
+    .get();
+
+  const data = [];
+  books.forEach((doc) => {
+    data.push({
+      id: doc.id,
+      ...doc.data(),
+    });
+  });
+
+  const date = data[0]?.createdAt?.toDate();
+
+  res.status(StatusCodes.OK).json({
+    code: "last_updated_books",
+    message: "Last updated books retrieved successfully",
+    data: date,
+  });
+};
+
 module.exports = {
   getBooksCategories,
   createBooksCategory,
   getBooks,
   createBook,
   populateBooks,
+  lastDataRefreshDate,
 };
