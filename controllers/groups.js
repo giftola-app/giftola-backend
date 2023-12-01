@@ -9,9 +9,14 @@ const productsCollection = "products";
 const { sendGroupInvite } = require("../utils/send_mail");
 
 const createGroup = async (req, res) => {
-  const { name, image } = req.body;
+  const { name } = req.body;
 
   _validateCreateGroupFields(req.body);
+
+  if (!req.image) {
+    image =
+      "https://firebasestorage.googleapis.com/v0/b/giftola-4b95c.appspot.com/o/giftola-favicon.png?alt=media&token=3188bc94-30eb-4551-84b9-f1d4dbe7f7f4";
+  }
 
   const group = {
     ...req.body,
@@ -397,8 +402,6 @@ const _validateCreateGroupFields = ({ name, image }) => {
   switch (true) {
     case !name:
       throw new BadRequestError("Name is required");
-    case !image:
-      throw new BadRequestError("Image is required");
     default:
       return;
   }

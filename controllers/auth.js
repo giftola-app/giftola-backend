@@ -382,6 +382,10 @@ const resetPassword = async (req, res) => {
   });
 };
 
+const deleteAccount = async (req, res) => {
+  //TODO: soft delete user
+};
+
 module.exports = {
   register,
   login,
