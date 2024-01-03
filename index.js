@@ -202,6 +202,18 @@ const start = async () => {
 
 start();
 
+const { populateBooks } = require("./controllers/books");
+
+const CronJob = require("cron").CronJob;
+const job = new CronJob(
+  //weekly
+  "0 0 0 * * 0",
+  populateBooks, // onTick
+  null,
+  true,
+  "America/Los_Angeles" // timeZone
+);
+
 // Export the Express API
 
 module.exports = app;
