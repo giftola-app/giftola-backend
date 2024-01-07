@@ -5,17 +5,6 @@ const contactsCollection = "contacts";
 const eventsCollection = "events";
 
 const createContact = async (req, res, respond = true) => {
-  const {
-    profileImage,
-    name,
-    email,
-    phone,
-    dob,
-    address,
-    city,
-    state,
-    zipCode,
-  } = req.body;
   _validateCreateContactFields(req.body);
 
   const contact = {
@@ -176,35 +165,17 @@ function validateContactAccess(contactData, req) {
 
 function _validateCreateContactFields(body) {
   if (
-    body.profileImage === undefined ||
-    body.name === undefined ||
-    body.email === undefined ||
-    body.phone === undefined ||
-    body.dob === undefined ||
-    body.address === undefined ||
-    body.city === undefined ||
-    body.state === undefined ||
-    body.zipCode === undefined
+    // body.firstName === undefined ||
+    // body.lastName === undefined ||
+    body.phone === undefined
   ) {
     switch (undefined) {
-      case body.profileImage:
-        throw new BadRequestError("profileImage is required");
-      case body.name:
-        throw new BadRequestError("name is required");
-      case body.email:
-        throw new BadRequestError("email is required");
+      // case body.firstName:
+      //   throw new BadRequestError("First Name is required");
+      // case body.lastName:
+      //   throw new BadRequestError("Last Name is required");
       case body.phone:
         throw new BadRequestError("phone is required");
-      case body.dob:
-        throw new BadRequestError("dob is required");
-      case body.address:
-        throw new BadRequestError("address is required");
-      case body.city:
-        throw new BadRequestError("city is required");
-      case body.state:
-        throw new BadRequestError("state is required");
-      case body.zipCode:
-        throw new BadRequestError("zipCode is required");
       default:
         throw new BadRequestError("All fields are required");
     }
