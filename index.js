@@ -60,6 +60,8 @@ const notificationsRouter = require("./routes/notifications");
 const booksRouter = require("./routes/books");
 const generalRouter = require("./routes/general");
 
+const firebaseMessagingRouter = require("./routes/firebase_messaging");
+
 //* Routes-Admin
 const adminAuthRouter = require("./routes/admin/auth");
 const adminCategoriesRouter = require("./routes/admin/categories");
@@ -121,7 +123,7 @@ function attachAdminAndDb(req, res, next) {
 }
 
 app.use(
-  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products|saved-gift-ideas|notifications|books|general)/,
+  /\/api\/v1\/(contacts|users\/auth|assets|events|interests|questions|products|categories|groups|saved-products|saved-gift-ideas|notifications|books|general|notify)/,
   attachAdminAndDb
 );
 app.use(
@@ -174,6 +176,8 @@ app.use("/api/v1/notifications", userAuthMiddleware, notificationsRouter);
 app.use("/api/v1/books", booksRouter);
 app.use("/api/v1/general", userAuthMiddleware, generalRouter);
 
+app.use("/api/v1/notify", firebaseMessagingRouter);
+
 // * Routes - Admin
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/categories", adminAuthMiddleware, adminCategoriesRouter);
@@ -208,7 +212,8 @@ const CronJob = require("cron").CronJob;
 const job = new CronJob(
   //weekly
   "0 0 0 * * 0",
-  populateBooks, // onTick
+  // "* * * * * *",
+  populateBooks(null, null, db, admin), // onTick
   null,
   true,
   "America/Los_Angeles" // timeZone

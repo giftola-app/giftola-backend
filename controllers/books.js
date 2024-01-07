@@ -117,7 +117,14 @@ const _validateBook = (book) => {
   }
 };
 
-const populateBooks = async (req, res) => {
+const populateBooks = async (req, res, db, admin) => {
+  if (!req) {
+    req = {
+      db,
+      admin,
+    };
+  }
+  console.log("populating books");
   const bookCategories = await getBooksCategories(req, res, false);
 
   const settingsRef = await req.db
@@ -143,8 +150,13 @@ const populateBooks = async (req, res) => {
         category.id,
         req
       );
+      console.log("books length", books.length);
+      if (books.length === 0) {
+        console.log("no books found");
+        continue;
+      }
 
-      await _populateBooks(books, req);
+      await _populateBooks(books, db);
     }
   } catch (error) {
     console.log("error", error);
@@ -208,11 +220,11 @@ const _parseRainforestResponse = (bestSellers, categoryId, req) => {
   return books;
 };
 
-const _populateBooks = async (books, req) => {
-  const batch = req.db.batch();
+const _populateBooks = async (books, db) => {
+  const batch = db.batch();
 
   books.forEach((book) => {
-    const newBookRef = req.db.collection(booksCollection).doc();
+    const newBookRef = db.collection(booksCollection).doc();
     batch.set(newBookRef, {
       ...book,
     });
